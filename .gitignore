@@ -1,0 +1,9 @@
+*.o
+*.log
+
+# dev
+dev.*
+dev/*
+
+# binaries
+bin/*
