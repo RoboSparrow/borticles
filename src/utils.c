@@ -9,6 +9,11 @@ void freez(void *ptr) {
     }
 }
 
+float rand_range_f(float min, float max) {
+    float scale = rand() / (float)RAND_MAX;
+    return min + scale * (max - min);
+}
+
 char *load_file_alloc(const char *path) {
     FILE *fp = fopen(path, "rb");
     if (!fp) {

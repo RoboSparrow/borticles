@@ -24,25 +24,21 @@
 const unsigned int WORLD_WIDTH = 800;
 const unsigned int WORLD_HEIGHT = 600;
 
-#define POP_MAX 100
+double then;
+
+#define POP_MAX 10000
 
 typedef struct { float x, y, z, w; } vec4;
 typedef struct { float r, g, b, a; } rgba;
 
 
-static void _update_positions(vec4 positions[], size_t len) {
-
+static void _update_positions(vec4 positions[], size_t len, int w_width, int W_height) {
     for (unsigned int i = 0; i < len; i++) {
-
-        float x = 0.02f * i * cos(90*M_PI* i / len);
-        float y = 0.02f * i * sin(90*M_PI* i / len);
-        positions[i].x = x;
-        positions[i].y = y;
+        positions[i].x = rand_range_f(-1.f, 1.f); // 0.02f * i * cos(90*M_PI* i / len);
+        positions[i].y = rand_range_f(-1.f, 1.f); // 0.02f * i * sin(90*M_PI* i / len);
         positions[i].z = 0.f;
-        positions[i].w = 1.f; // size
-        printf("%d %f %f\n", i, positions[1].x, positions[1].y);
+        positions[i].w = rand_range_f(0.5f, 5.f); // size
     }
-    // printf("------------\n");
 }
 
 static void _update_colors(rgba colors[], size_t len) {
@@ -112,37 +108,57 @@ static unsigned int _ogl_shader_program(unsigned int vertexShader, unsigned int 
 }
 
 enum {
-    BUF_VERTEX,
+    BUF_VERTEXES,
+    BUF_INDEXES,
+
     BUF_POSITIONS,
     BUF_COLORS,
     BUF_NUM,
 } buffers;
 
-static void _shader_vertexes(int *vao, int *vbo) {
+static void _shader_vertexes(int *vao, int *vbo, float width, float height) {
+    float x  = width / 2;
+    float y  = height / 2;
+    printf("%f %f \n", x, y);
     GLfloat vertices[] = {
         // x    y     z
-        -0.2f, -0.2f, 0.0f,
-         0.2f, -0.2f, 0.0f,
-         0.0f, 0.2f,  0.0f
+        -x, -y, 0.0f,
+        -x,  y, 0.0f,
+         x,  y, 0.0f,
+         x, -y, 0.0f
+    };
+
+    GLuint indexes[] = {
+        1, 0, 2, 3
     };
 
     glGenVertexArrays(1, vao);
     glGenBuffers(BUF_NUM, vbo);
 
     // 1. bind the vao
+
     glBindVertexArray(*vao);
 
-    // 2. bind and set vertex buffer(s)
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[BUF_VERTEX]);
+    // 2. bind the buffers
+
+    //  - vertices
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[BUF_VERTEXES]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+    //  - indexes
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo[BUF_INDEXES]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indexes), &indexes[0], GL_STATIC_DRAW);
+
+    //  - positions
     glBindBuffer(GL_ARRAY_BUFFER, vbo[BUF_POSITIONS]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vec4) * POP_MAX, NULL, GL_STREAM_DRAW);    //NULL (empty) buffer
 
+    //  - colors
     glBindBuffer(GL_ARRAY_BUFFER, vbo[BUF_COLORS]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(rgba) * POP_MAX, NULL, GL_STREAM_DRAW);    //NULL (empty) buffer
 
-    // cleanup
+    // 3. cleanup
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
@@ -168,7 +184,7 @@ static void _ogl_draw_2D(unsigned int program, GLuint *vao, GLuint *vbo, vec4 po
 
     // vertex
     glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[BUF_VERTEX]);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[BUF_VERTEXES]);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0); // 3 points, float data, no rgba
 
     // positions
@@ -183,9 +199,7 @@ static void _ogl_draw_2D(unsigned int program, GLuint *vao, GLuint *vbo, vec4 po
     glBufferData(GL_ARRAY_BUFFER, sizeof(rgba) * len, &colors[0], GL_STREAM_DRAW);
     glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-
-    //glDrawElementsInstanced(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0, len);
-    glDrawArraysInstanced(GL_TRIANGLES, 0, 3, len);
+    glDrawElementsInstanced(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_INT, 0, len);
 
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
@@ -217,6 +231,9 @@ int main() {
     GLuint VAO;
     GLuint VBO[BUF_NUM];
 
+    time_t seed = time(NULL);
+    srand(seed); // set random seed
+
     glfwSetErrorCallback(error_callback);
 
     glfwInit();
@@ -227,7 +244,7 @@ int main() {
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
     // window
-    GLFWwindow* window = glfwCreateWindow(WORLD_WIDTH, WORLD_HEIGHT, "LearnOpenGL", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(WORLD_WIDTH, WORLD_HEIGHT, "Borticles", NULL, NULL);
     glfwMakeContextCurrent(window);
 
     //callbacks
@@ -250,20 +267,31 @@ int main() {
     GLuint vert_sh = _ogl_compile_shader("shaders/borticle.vert", GL_VERTEX_SHADER);
     GLuint frag_sh = _ogl_compile_shader("shaders/borticle.frag", GL_FRAGMENT_SHADER);
     GLuint program = _ogl_shader_program(vert_sh, frag_sh, 0);
-    _shader_vertexes(&VAO, VBO);
+    _shader_vertexes(&VAO, VBO, 20 / (float) width, 20 / (float) height);
 
     // data
     vec4 positions[POP_MAX];
     rgba colors[POP_MAX];
 
+    // fps calc
+    double now, delta;
+    double max = 1.0 / 24.0;
+    then = glfwGetTime();
+
     // Game loop
     while (!glfwWindowShouldClose(window)) {
+        now = glfwGetTime();
+        if (now - then < max) {
+            continue;
+        }
 
-        _update_positions(positions, POP_MAX);
+        _update_positions(positions, POP_MAX, width, height);
         _update_colors(colors, POP_MAX);
 
         _ogl_pre_draw_2D(program);
         _ogl_draw_2D(program, &VAO, VBO, positions, colors, POP_MAX);
+
+        then = now;
 
         glfwSwapBuffers(window);
         glfwPollEvents();

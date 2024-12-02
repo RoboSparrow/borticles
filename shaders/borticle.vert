@@ -1,10 +1,3 @@
-//#version 410 core
-//
-//in vec4 position;
-//
-//void main() {
-//    gl_Position = vec4(position.x, position.y, position.z, position.w);
-//}
 
 #version 410 core
 
@@ -16,5 +9,12 @@ out vec4 color;
 
 void main() {
     color = colors;
-    gl_Position = vec4(vertex, 1.0) + positions;
+
+    float scl = positions.w;
+    mat4 scaled = mat4(scl, 0.0, 0.0, 0.0,  // 1. column
+                       0.0, scl, 0.0, 0.0,  // 2. column
+                       0.0, 0.0, scl, 0.0,  // 3. column
+                       0.0, 0.0, 0.0, 1.0); // 4. column
+
+    gl_Position = scaled * (vec4(vertex, 1.0) + vec4(positions.xyz, 1.0));
 }
