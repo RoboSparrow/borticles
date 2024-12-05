@@ -5,7 +5,7 @@ INCDIR=$(SRCDIR)
 BINDIR=bin
 LIBDIR=lib
 
-BIN=bin/borticles
+BIN=$(BINDIR)/borticles
 
 CFLAGS=-Wall -Wextra -Werror -Wpedantic -pedantic-errors
 LOPT=-lm -lGL

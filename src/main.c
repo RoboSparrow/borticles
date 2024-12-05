@@ -6,7 +6,7 @@
 
 
 ////
-// rm -f ./versuch && clear && gcc ./versuch.c ./glad/src/glad.c -lglfw -lGL -lm -I. -I./glad/include -o ./versuch && ./versuch
+// clear && make clean && make && ./bin/borticles
 ////
 
 
@@ -268,6 +268,9 @@ int main() {
     GLuint frag_sh = _ogl_compile_shader("shaders/borticle.frag", GL_FRAGMENT_SHADER);
     GLuint program = _ogl_shader_program(vert_sh, frag_sh, 0);
     _shader_vertexes(&VAO, VBO, 20 / (float) width, 20 / (float) height);
+
+    // uncomment this call to draw in wireframe polygons.
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // data
     vec4 positions[POP_MAX];
