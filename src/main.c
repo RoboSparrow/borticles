@@ -119,7 +119,7 @@ enum {
 static void _shader_vertexes(int *vao, int *vbo, float width, float height) {
     float x  = width / 2;
     float y  = height / 2;
-    printf("%f %f \n", x, y);
+
     GLfloat vertices[] = {
         // x    y     z
         -x, -y, 0.0f,
@@ -149,11 +149,11 @@ static void _shader_vertexes(int *vao, int *vbo, float width, float height) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo[BUF_INDEXES]);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indexes), &indexes[0], GL_STATIC_DRAW);
 
-    //  - positions
+    // - set up positions data (empty)
     glBindBuffer(GL_ARRAY_BUFFER, vbo[BUF_POSITIONS]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vec4) * POP_MAX, NULL, GL_STREAM_DRAW);    //NULL (empty) buffer
 
-    //  - colors
+    // - set up colors data (empty)
     glBindBuffer(GL_ARRAY_BUFFER, vbo[BUF_COLORS]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(rgba) * POP_MAX, NULL, GL_STREAM_DRAW);    //NULL (empty) buffer
 
