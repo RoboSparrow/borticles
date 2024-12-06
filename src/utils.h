@@ -1,6 +1,8 @@
 #ifndef __UTILS_H__
 #define __UTILS_H__
 
+#include <stdio.h>
+
 #define LOG_INFO(msg)                                                   \
     do {                                                                \
         fprintf(stderr, "[Info](%s:%d) %s\n", __FILE__, __LINE__, msg); \
@@ -40,5 +42,19 @@
 void freez(void *ptr);
 float rand_range_f(float min, float max);
 char *load_file_alloc(const char *path);
+
+// TODO this is a temp location of these defs
+typedef struct { float x, y, z;    } vec3;
+typedef struct { float x, y, z, w; } vec4;
+typedef struct { float r, g, b, a; } rgba;
+
+typedef enum {
+    BUF_VERTEXES,
+    BUF_INDEXES,
+
+    BUF_POSITIONS,
+    BUF_COLORS,
+    BUF_NUM,
+} BufferObjects;
 
 #endif
