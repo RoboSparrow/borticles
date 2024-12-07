@@ -48,11 +48,11 @@ void bort_init_shaders_data(int *vao, int *vbo, unsigned int pop_len, float widt
 
     // - set up positions data (empty)
     glBindBuffer(GL_ARRAY_BUFFER, vbo[BUF_POSITIONS]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vec4) * pop_len, NULL, GL_STREAM_DRAW);    //NULL (empty) buffer
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vec4) * pop_len, NULL, GL_DYNAMIC_DRAW);    // NULL (empty) buffer
 
     // - set up colors data (empty)
     glBindBuffer(GL_ARRAY_BUFFER, vbo[BUF_COLORS]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(rgba) * pop_len, NULL, GL_STREAM_DRAW);    //NULL (empty) buffer
+    glBufferData(GL_ARRAY_BUFFER, sizeof(rgba) * pop_len, NULL, GL_STREAM_DRAW);    // NULL (empty) buffer
 
     // 3. cleanup
 
@@ -84,7 +84,7 @@ static void _update_color(Borticle *bort, size_t index) {
     // bort->color.a = (ax > ay) ? 1.f - ax : 1.f - ay;
 }
 
-void bort_update(Borticle pop[], vec4 positions[], rgba colors[], size_t pop_len) {
+void bort_update(QNode *tree, Borticle pop[], vec4 positions[], rgba colors[], size_t pop_len) {
     if (!pop) {
         return;
     }
@@ -98,13 +98,15 @@ void bort_update(Borticle pop[], vec4 positions[], rgba colors[], size_t pop_len
         // update vertx data
         positions[i] = (vec4) {pop[i].pos.x, pop[i].pos.y, pop[i].pos.z, pop[i].size};
         colors[i] = pop[i].color;
+
+        qnode_insert(tree, (vec2) {pop[i].pos.x, pop[i].pos.y}, pop[i].id);
     }
 }
 
 /**
  * prepares drawing to window
  */
-void bort_draw_2D(unsigned int program, GLuint *vao, GLuint *vbo, Borticle pop[], vec4 positions[], rgba colors[], size_t pop_len) {
+void bort_draw_2D(unsigned int program, GLuint *vao, GLuint *vbo, QNode *tree, Borticle pop[], vec4 positions[], rgba colors[], size_t pop_len) {
     if (!pop) {
         return;
     }
@@ -123,13 +125,13 @@ void bort_draw_2D(unsigned int program, GLuint *vao, GLuint *vbo, Borticle pop[]
     // positions
     glEnableVertexAttribArray(1);
     glBindBuffer(GL_ARRAY_BUFFER, vbo[BUF_POSITIONS]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vec4) * pop_len, &positions[0], GL_STREAM_DRAW);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vec4) * pop_len, &positions[0]);
     glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
     // colors
     glEnableVertexAttribArray(2);
     glBindBuffer(GL_ARRAY_BUFFER,  vbo[BUF_COLORS]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(rgba) * pop_len, &colors[0], GL_STREAM_DRAW);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(rgba) * pop_len, &colors[0]);
     glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
     glDrawElementsInstanced(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_INT, 0, pop_len);
@@ -139,4 +141,21 @@ void bort_draw_2D(unsigned int program, GLuint *vao, GLuint *vbo, Borticle pop[]
     glDisableVertexAttribArray(2);
 
     glBindVertexArray(0);
+}
+
+////
+//
+////
+
+static void _draw_qtree_asc(QNode *node) {
+    if (!node) {
+        return;
+    }
+static void _draw_qtree_desc(QNode *node) {}
+
+void qtree_draw(QNode *tree) {
+    if (!tree) {
+        return;
+    }
+    qnode_walk(tree, _draw_qtree_asc, _draw_qtree_desc);
 }

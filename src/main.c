@@ -19,8 +19,8 @@
 #include <GLFW/glfw3.h>
 
 #include "utils.h"
-#include "shader.h"
 #include "borticle.h"
+#include "quadtree.h"
 
 // settings
 const unsigned int WORLD_WIDTH = 800;
@@ -138,16 +138,16 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
 
         // update
-        bort_update(pop, positions, colors, POP_MAX);
+        QNode *tree = qnode_create((rect){0.f, 0.f, (float)width, (float)height});
+        bort_update(tree, pop, positions, colors, POP_MAX);
 
         // draw
-
-
         glUseProgram(program);
-        bort_draw_2D(program, &VAO, VBO, pop, positions, colors, POP_MAX);
+        bort_draw_2D(program, &VAO, VBO, tree, pop, positions, colors, POP_MAX);
 
         // finalize
         then = now;
+        qnode_destroy(tree);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

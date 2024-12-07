@@ -44,9 +44,11 @@ float rand_range_f(float min, float max);
 char *load_file_alloc(const char *path);
 
 // TODO this is a temp location of these defs
-typedef struct { float x, y, z;    } vec3;
-typedef struct { float x, y, z, w; } vec4;
-typedef struct { float r, g, b, a; } rgba;
+typedef struct {float x, y;}       vec2;
+typedef struct {float x, y, z;   } vec3;
+typedef struct {float x, y, z, w;} vec4;
+typedef struct {float r, g, b, a;} rgba;
+typedef struct {float x, y, width, height;} rect;
 
 typedef enum {
     BUF_VERTEXES,
