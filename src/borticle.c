@@ -142,20 +142,3 @@ void bort_draw_2D(unsigned int program, GLuint *vao, GLuint *vbo, QNode *tree, B
 
     glBindVertexArray(0);
 }
-
-////
-//
-////
-
-static void _draw_qtree_asc(QNode *node) {
-    if (!node) {
-        return;
-    }
-static void _draw_qtree_desc(QNode *node) {}
-
-void qtree_draw(QNode *tree) {
-    if (!tree) {
-        return;
-    }
-    qnode_walk(tree, _draw_qtree_asc, _draw_qtree_desc);
-}

@@ -22,6 +22,4 @@ void bort_update(QNode *tree, Borticle pop[], vec4 positions[], rgba colors[], s
 
 // draw
 void bort_draw_2D(unsigned int program, GLuint *vao, GLuint *vbo, QNode *tree, Borticle pop[], vec4 positions[], rgba colors[], size_t pop_len);
-
-void qtree_draw(QNode *root);
 #endif
