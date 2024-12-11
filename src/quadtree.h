@@ -52,5 +52,7 @@ QNode *qnode_get(QNode *node, vec2 pos);
 void qnode_walk(QNode *root, void (*descent)(QNode *node), void (*ascent)(QNode *node));
 void qnode_destroy(QNode *node);
 
+size_t qnode_count(QNode *root); // counts quads! TODO, count on creation
+
 void qnode_print(FILE *fp, QNode *node);
 #endif

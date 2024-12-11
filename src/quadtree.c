@@ -3,6 +3,8 @@
 
 #include "quadtree.h"
 
+static int count = 0;
+
 static unsigned int _has_duplicate_pos(QNode *node, vec2 pos) {
     if (!node->sz || !node->members) {
         return 0;
@@ -77,6 +79,14 @@ static void _split(QNode *node) {
     node->sz = 0;
     freez(node->members);
     node->members = NULL;
+}
+
+static  int _count_quads(QNode *root) {
+    count ++;
+    if(root->nw != NULL) _count_quads(root->nw);
+    if(root->ne != NULL) _count_quads(root->ne);
+    if(root->sw != NULL) _count_quads(root->sw);
+    if(root->se != NULL) _count_quads(root->se);
 }
 
 QNode *qnode_create(rect area) {
@@ -169,6 +179,14 @@ void qnode_walk(QNode *root, void (*descent)(QNode *node), void (*ascent)(QNode 
     if(root->sw != NULL) qnode_walk(root->sw, descent, ascent);
     if(root->se != NULL) qnode_walk(root->se, descent, ascent);
     (*ascent)(root);
+}
+
+size_t qnode_count(QNode *root) {
+    count = 0;
+    if (root) {
+        _count_quads(root);
+    }
+    return count;
 }
 
 void qnode_print(FILE *fp, QNode *node) {
