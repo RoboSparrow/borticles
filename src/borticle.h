@@ -2,6 +2,7 @@
 #define __BORTICLE_H__
 
 #include <glad/glad.h>
+#include "external/math_3d.h"
 
 #include "utils.h"
 #include "quadtree.h"
@@ -9,13 +10,14 @@
 
 typedef struct {
     unsigned int id;
-    vec3 pos, vel, acc;
+    vec3_t pos, vel, acc;
     float size;
     rgba  color;
 } Borticle;
 
 // init
 void bort_init_shaders(ShaderState *state);
+void bort_init_matrices(ShaderState *state, float model[4][4], float view[4][4], float projection[4][4]);
 void bort_init_shaders_data(ShaderState *state, unsigned int pop_len);
 
 // update

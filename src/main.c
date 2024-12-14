@@ -3,8 +3,6 @@
 
 // “Instancing” means that we have a base mesh (in our case, a simple quad of 2 triangles), but many instances of this quad.
 
-
-
 ////
 // clear && make clean && make && ./bin/borticles
 ////
@@ -21,6 +19,9 @@
 #include "utils.h"
 #include "borticle.h"
 #include "quadtree.h"
+
+#define MATH_3D_IMPLEMENTATION
+#include "external/math_3d.h"
 
 // settings
 const unsigned int WORLD_WIDTH = 800;
@@ -87,12 +88,18 @@ int main() {
 
     glfwSetFramebufferSizeCallback(window, _framebuffer_size_callback);
 
+    // matrices
+    mat4_t model = m4_identity();
+    mat4_t view = m4_identity();
+    mat4_t projection = m4_ortho(0.f, (float) width, (float) height, 0.f, -1.f, 1.f) ;
+
     // borticle shaders
     ShaderState bort = {0};
     bort.vp_width = width;
     bort.vp_height = height;
 
     bort_init_shaders(&bort);
+    bort_init_matrices(&bort, model.m, view.m, projection.m);
     bort_init_shaders_data(&bort, POP_MAX);
 
     // uncomment this call to draw in wireframe polygons.
@@ -105,19 +112,19 @@ int main() {
     Borticle pop[POP_MAX];
     for (size_t i = 0; i < POP_MAX; i++) {
         pop[i].id = i;
-        pop[i].pos = (vec3) {0.f, 0.f, 0.f};
+        pop[i].pos = (vec3_t) {0.f, 0.f, 0.f};
         pop[i].color = (rgba) {
             rand_range_f(0.f, 1.f),
             rand_range_f(0.f, 1.f),
             rand_range_f(0.f, 1.f),
             1.f
         };
-        pop[i].vel = (vec3) {
+        pop[i].vel = (vec3_t) {
             rand_range_f(-1.f, 1.f),
             rand_range_f(-1.f, 1.f),
             0.f
         };
-        pop[i].acc = (vec3) {
+        pop[i].acc = (vec3_t) {
             rand_range_f(0.001f, 0.01f),
             rand_range_f(0.001f, 0.01f),
             0.f

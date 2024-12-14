@@ -2,15 +2,24 @@
 #include <math.h>
 
 #include <glad/glad.h>
+#include "external/math_3d.h"
 
 #include "utils.h"
 #include "shader.h"
 #include "borticle.h"
 
+
 void bort_init_shaders(ShaderState *state){
     GLuint vert_sh = shader_load("shaders/borticle.vert", GL_VERTEX_SHADER);
     GLuint frag_sh = shader_load("shaders/borticle.frag", GL_FRAGMENT_SHADER);
     state->program = shader_program(vert_sh, frag_sh, 0);
+}
+
+void bort_init_matrices(ShaderState *state, float model[4][4], float view[4][4], float projection[4][4]) {
+    return; //dev
+    state->loc_model      = shader_set_uniform_mat4(state->program, "model", model);
+    state->loc_view       = shader_set_uniform_mat4(state->program, "view", view);
+    state->loc_projection = shader_set_uniform_mat4(state->program, "projection", projection);
 }
 
 void bort_init_shaders_data(ShaderState *state, unsigned int pop_len) {

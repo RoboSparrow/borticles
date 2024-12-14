@@ -30,6 +30,16 @@ unsigned int shader_load(const char *path, int type) {
     return shader;
 }
 
+int shader_set_uniform_mat4(unsigned int program, char *name, float mat[4][4]) {
+    int loc = glGetUniformLocation(program, name);
+    if (loc < 0) {
+        LOG_ERROR_F("shader program %d: loading uniform location '%s' failed (%d)", program, name, loc);
+        return loc;
+    }
+    glUniformMatrix4fv(loc, 1, GL_FALSE, &mat[0][0]);
+    return loc;
+}
+
 unsigned int shader_program(unsigned int vertexShader, unsigned int fragmentShader, unsigned int geometryShader) {
     unsigned int program = glCreateProgram();
 
