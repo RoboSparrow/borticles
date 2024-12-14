@@ -7,15 +7,15 @@
 #include "shader.h"
 #include "borticle.h"
 
-void bort_init_shaders(GLuint *program) {
+void bort_init_shaders(ShaderState *state){
     GLuint vert_sh = shader_load("shaders/borticle.vert", GL_VERTEX_SHADER);
     GLuint frag_sh = shader_load("shaders/borticle.frag", GL_FRAGMENT_SHADER);
-    *program = shader_program(vert_sh, frag_sh, 0);
+    state->program = shader_program(vert_sh, frag_sh, 0);
 }
 
-void bort_init_shaders_data(int *vao, int *vbo, unsigned int pop_len, float width, float height) {
-    float x  = width / 2;
-    float y  = height / 2;
+void bort_init_shaders_data(ShaderState *state, unsigned int pop_len) {
+    float x  = 5 / ((float) state->vp_width / 2);
+    float y  = 5 / ((float) state->vp_height / 2);
 
     GLfloat vertices[] = {
         // x    y     z
@@ -29,29 +29,29 @@ void bort_init_shaders_data(int *vao, int *vbo, unsigned int pop_len, float widt
         1, 0, 2, 3
     };
 
-    glGenVertexArrays(1, vao);
-    glGenBuffers(BUF_NUM, vbo);
+    glGenVertexArrays(1, state->vao);
+    glGenBuffers(BUF_NUM, state->vbo);
 
     // 1. bind the vao
 
-    glBindVertexArray(*vao);
+    glBindVertexArray(state->vao[0]);
 
     // 2. bind the buffers
 
     //  - vertices
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[BUF_VERTEXES]);
+    glBindBuffer(GL_ARRAY_BUFFER, state->vbo[BUF_VERTEXES]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     //  - indexes
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo[BUF_INDEXES]);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, state->vbo[BUF_INDEXES]);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indexes), &indexes[0], GL_STATIC_DRAW);
 
     // - set up positions data (empty)
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[BUF_POSITIONS]);
+    glBindBuffer(GL_ARRAY_BUFFER, state->vbo[BUF_POSITIONS]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vec4) * pop_len, NULL, GL_DYNAMIC_DRAW);    // NULL (empty) buffer
 
     // - set up colors data (empty)
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[BUF_COLORS]);
+    glBindBuffer(GL_ARRAY_BUFFER, state->vbo[BUF_COLORS]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(rgba) * pop_len, NULL, GL_STREAM_DRAW);    // NULL (empty) buffer
 
     // 3. cleanup
@@ -84,7 +84,7 @@ static void _update_color(Borticle *bort, size_t index) {
     // bort->color.a = (ax > ay) ? 1.f - ax : 1.f - ay;
 }
 
-void bort_update(QNode *tree, Borticle pop[], vec4 positions[], rgba colors[], size_t pop_len) {
+void bort_update(ShaderState *state, QNode *tree, Borticle pop[], vec4 positions[], rgba colors[], size_t pop_len) {
     if (!pop) {
         return;
     }
@@ -106,12 +106,12 @@ void bort_update(QNode *tree, Borticle pop[], vec4 positions[], rgba colors[], s
 /**
  * prepares drawing to window
  */
-void bort_draw_2D(unsigned int program, GLuint *vao, GLuint *vbo, QNode *tree, Borticle pop[], vec4 positions[], rgba colors[], size_t pop_len) {
-    if (!pop) {
+void bort_draw_2D(ShaderState *state, QNode *tree, Borticle pop[], vec4 positions[], rgba colors[], size_t pop_len) {
+    if (!state || !tree) {
         return;
     }
-
-    glBindVertexArray(*vao);
+    glUseProgram(state->program);
+    glBindVertexArray(state->vao[0]);
 
     glVertexAttribDivisor(0, 0); // vertex
     glVertexAttribDivisor(1, 1); // positions
@@ -119,18 +119,18 @@ void bort_draw_2D(unsigned int program, GLuint *vao, GLuint *vbo, QNode *tree, B
 
     // vertex
     glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[BUF_VERTEXES]);
+    glBindBuffer(GL_ARRAY_BUFFER, state->vbo[BUF_VERTEXES]);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0); // 3 points, float data, no rgba
 
     // positions
     glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[BUF_POSITIONS]);
+    glBindBuffer(GL_ARRAY_BUFFER, state->vbo[BUF_POSITIONS]);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vec4) * pop_len, &positions[0]);
     glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
     // colors
     glEnableVertexAttribArray(2);
-    glBindBuffer(GL_ARRAY_BUFFER,  vbo[BUF_COLORS]);
+    glBindBuffer(GL_ARRAY_BUFFER, state->vbo[BUF_COLORS]);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(rgba) * pop_len, &colors[0]);
     glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
 

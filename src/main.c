@@ -31,6 +31,8 @@ double then;
 #define POP_MAX 1000
 #define FPS 12.0
 
+// viewport
+int width, height;
 
 // Is called whenever a key is pressed/released via GLFW
 static void _key_callback(GLFWwindow* window, int key, int scancode, int action, int mode) {
@@ -43,7 +45,9 @@ static void _key_callback(GLFWwindow* window, int key, int scancode, int action,
  *      make sure the viewport matches the new window dimensions; note that width and
  *      height will be significantly larger than specified on retina displays.
  */
-static void _framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+static void _framebuffer_size_callback(GLFWwindow* window, int w, int h) {
+    width = w;
+    height = h;
     glViewport(0, 0, width, height);
 }
 
@@ -52,9 +56,6 @@ static void _error_callback(int err, const char* message) {
 }
 
 int main() {
-    GLuint VAO;
-    GLuint VBO[BUF_NUM];
-
     time_t seed = time(NULL);
     srand(seed); // set random seed
 
@@ -81,16 +82,18 @@ int main() {
     }
 
     // viewport
-    int width, height;
     glfwGetFramebufferSize(window, &width, &height);
     glViewport(0, 0, width, height);
 
     glfwSetFramebufferSizeCallback(window, _framebuffer_size_callback);
 
     // borticle shaders
-    GLuint program;
-    bort_init_shaders(&program);
-    bort_init_shaders_data(&VAO, VBO, POP_MAX, 20 / (float) width, 20 / (float) height);
+    ShaderState bort = {0};
+    bort.vp_width = width;
+    bort.vp_height = height;
+
+    bort_init_shaders(&bort);
+    bort_init_shaders_data(&bort, POP_MAX);
 
     // uncomment this call to draw in wireframe polygons.
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -138,12 +141,13 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
 
         // update
+        bort.vp_width = width;
+        bort.vp_height = height;
         QNode *tree = qnode_create((rect){0.f, 0.f, (float)width, (float)height});
-        bort_update(tree, pop, positions, colors, POP_MAX);
+        bort_update(&bort, tree, pop, positions, colors, POP_MAX);
 
         // draw
-        glUseProgram(program);
-        bort_draw_2D(program, &VAO, VBO, tree, pop, positions, colors, POP_MAX);
+        bort_draw_2D(&bort, tree, pop, positions, colors, POP_MAX);
 
         // finalize
         then = now;
@@ -154,8 +158,8 @@ int main() {
     }
 
     // cleanup
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(BUF_NUM, VBO);
+    glDeleteVertexArrays(1, bort.vao);
+    glDeleteBuffers(BUF_NUM, bort.vbo);
     glfwTerminate();
 
     return 0;
