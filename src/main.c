@@ -91,7 +91,7 @@ int main() {
     // matrices
     mat4_t model = m4_identity();
     mat4_t view = m4_identity();
-    mat4_t projection = m4_ortho(0.f, (float) width, (float) height, 0.f, -1.f, 1.f) ;
+    mat4_t projection = m4_ortho(0.f, (float) width, (float) height, 0.f, 0.f, 1.f);
 
     // borticle shaders
     ShaderState bort = {0};
@@ -110,9 +110,12 @@ int main() {
     rgba colors[POP_MAX];
 
     Borticle pop[POP_MAX];
+    float hw = (float) width / 2;
+    float hh = (float) height / 2;
+
     for (size_t i = 0; i < POP_MAX; i++) {
         pop[i].id = i;
-        pop[i].pos = (vec3_t) {0.f, 0.f, 0.f};
+        pop[i].pos = (vec3_t) {hw, hh, 0.f};
         pop[i].color = (rgba) {
             rand_range_f(0.f, 1.f),
             rand_range_f(0.f, 1.f),
@@ -120,16 +123,16 @@ int main() {
             1.f
         };
         pop[i].vel = (vec3_t) {
-            rand_range_f(-1.f, 1.f),
-            rand_range_f(-1.f, 1.f),
+            rand_range_f(-10.f, 10.f),
+            rand_range_f(-10.f, 10.f),
             0.f
         };
         pop[i].acc = (vec3_t) {
-            rand_range_f(0.001f, 0.01f),
-            rand_range_f(0.001f, 0.01f),
+            rand_range_f(0.1f, 5.f),
+            rand_range_f(0.1f, 5.f),
             0.f
         };
-        pop[i].size = rand_range_f(0.1f, 2.f);
+        pop[i].size = rand_range_f(0.1f, 6.f);
     }
 
     // fps calc

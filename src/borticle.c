@@ -16,22 +16,25 @@ void bort_init_shaders(ShaderState *state){
 }
 
 void bort_init_matrices(ShaderState *state, float model[4][4], float view[4][4], float projection[4][4]) {
-    return; //dev
+    glUseProgram(state->program);
     state->loc_model      = shader_set_uniform_mat4(state->program, "model", model);
     state->loc_view       = shader_set_uniform_mat4(state->program, "view", view);
     state->loc_projection = shader_set_uniform_mat4(state->program, "projection", projection);
+    glUseProgram(0);
 }
 
 void bort_init_shaders_data(ShaderState *state, unsigned int pop_len) {
-    float x  = 5 / ((float) state->vp_width / 2);
-    float y  = 5 / ((float) state->vp_height / 2);
+    float cx  = (float) state->vp_width / 2;
+    float cy  = (float) state->vp_height / 2;
+    float sz = 5.f;
 
-    GLfloat vertices[] = {
+    float vertices[] = {
         // x    y     z
-        -x, -y, 0.0f,
-        -x,  y, 0.0f,
-         x,  y, 0.0f,
-         x, -y, 0.0f
+        cx     , cy + sz, 0.0f, // bottom left
+        cx + sz, cy + sz, 0.0f, // bottom right
+        cx + sz, cy     , 0.0f, // top right
+        cx     , cy     , 0.0f  // top left
+
     };
 
     GLuint indexes[] = {
@@ -69,25 +72,35 @@ void bort_init_shaders_data(ShaderState *state, unsigned int pop_len) {
     glBindVertexArray(0);
 }
 
-static void _update_size(Borticle *bort, size_t index) {
+static void _update_size(ShaderState *state, Borticle *bort, size_t index) {
 }
 
-static void _update_position(Borticle *bort, size_t index) {
-    bort->vel.x += bort->acc.x;
-    bort->vel.y += bort->acc.y;
+static void _update_position(ShaderState *state, Borticle *bort, size_t index) {
+    float dirx = (bort->vel.x > 0) ? 1 : -1;
+    float diry = (bort->vel.y > 0) ? 1 : -1;
+
+    bort->vel.x = (dirx * bort->acc.x);
+    bort->vel.y = (diry * bort->acc.y);
+
     bort->pos.x += bort->vel.x;
     bort->pos.y += bort->vel.y;
-    if (fabsf(bort->pos.x) > 1.f || fabsf(bort->pos.y) > 1.f) {
+    if (
+           bort->pos.x < 0
+        || bort->pos.x > state->vp_width
+        || bort->pos.y < 0
+        || bort->pos.y > state->vp_height
+    ) {
         // reset
-        bort->pos.x = 0.f;
-        bort->pos.y = 0.f;
-        bort->vel.x = rand_range_f(-1.f, 1.f);
-        bort->vel.y = rand_range_f(-1.f, 1.f);
+        bort->pos.x = state->vp_width / 2.f;
+        bort->pos.y = state->vp_height / 2.f;
+        bort->vel.x = rand_range_f(-10.f, 10.f);
+        bort->vel.y = rand_range_f(-10.f, 10.f);
+        // printf("%d p: {%f,%f}, v: {%f,%f}\n", bort->id, bort->pos.x, bort->pos.y, bort->vel.x, bort->vel.y);
     }
     // printf("%d {%f,%f}\n", bort->id, bort->pos.x, bort->pos.y);
 }
 
-static void _update_color(Borticle *bort, size_t index) {
+static void _update_color(ShaderState *state, Borticle *bort, size_t index) {
     // float ax = fabsf(bort->pos.x);
     // float ay = fabsf(bort->pos.y);
     // bort->color.a = (ax > ay) ? 1.f - ax : 1.f - ay;
@@ -100,9 +113,9 @@ void bort_update(ShaderState *state, QNode *tree, Borticle pop[], vec4 positions
 
     for (size_t i = 0; i < pop_len; i++) {
         // update bort TODO accl, vel
-        _update_size(&pop[i], i);
-        _update_position(&pop[i], i);
-        _update_color(&pop[i], i);
+        _update_size(state, &pop[i], i);
+        _update_position(state, &pop[i], i);
+        _update_color(state, &pop[i], i);
 
         // update vertx data
         positions[i] = (vec4) {pop[i].pos.x, pop[i].pos.y, pop[i].pos.z, pop[i].size};
@@ -150,4 +163,5 @@ void bort_draw_2D(ShaderState *state, QNode *tree, Borticle pop[], vec4 position
     glDisableVertexAttribArray(2);
 
     glBindVertexArray(0);
+    glUseProgram(0);
 }
