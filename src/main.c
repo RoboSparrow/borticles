@@ -17,6 +17,8 @@
 #include <GLFW/glfw3.h>
 
 #include "utils.h"
+#include "log.h"
+
 #include "borticle.h"
 #include "quadtree.h"
 
@@ -168,8 +170,7 @@ int main() {
     }
 
     // cleanup
-    glDeleteVertexArrays(1, bort.vao);
-    glDeleteBuffers(BUF_NUM, bort.vbo);
+    bort_cleanup_shaders(&bort);
     glfwTerminate();
 
     return 0;

@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "log.h"
+#include "utils.h"
 #include "quadtree.h"
 
 static int count = 0;

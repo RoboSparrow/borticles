@@ -8,6 +8,14 @@
 #include "shader.h"
 #include "borticle.h"
 
+typedef enum {
+    BUF_VERTEXES,
+    BUF_INDEXES,
+
+    BUF_POSITIONS,
+    BUF_COLORS,
+    BUF_NUM,
+} BufferObjects;
 
 void bort_init_shaders(ShaderState *state){
     GLuint vert_sh = shader_load("shaders/borticle.vert", GL_VERTEX_SHADER);
@@ -164,4 +172,12 @@ void bort_draw_2D(ShaderState *state, QNode *tree, Borticle pop[], vec4 position
 
     glBindVertexArray(0);
     glUseProgram(0);
+}
+
+void bort_cleanup_shaders(ShaderState *state) {
+    if (!state) {
+        return;
+    }
+    glDeleteVertexArrays(1, state->vao);
+    glDeleteBuffers(BUF_NUM, state->vbo);
 }

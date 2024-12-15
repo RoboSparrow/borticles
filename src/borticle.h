@@ -25,4 +25,7 @@ void bort_update(ShaderState *state, QNode *tree, Borticle pop[], vec4 positions
 
 // draw
 void bort_draw_2D(ShaderState *state, QNode *tree, Borticle pop[], vec4 positions[], rgba colors[], size_t pop_len);
+
+// exit
+void bort_cleanup_shaders(ShaderState *state);
 #endif

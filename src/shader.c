@@ -1,6 +1,7 @@
 #include <glad/glad.h>
 
 #include "utils.h"
+#include "log.h"
 #include "shader.h"
 
 unsigned int shader_load(const char *path, int type) {

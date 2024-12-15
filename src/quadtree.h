@@ -1,7 +1,8 @@
 #ifndef __QUADTREE_H__
 #define __QUADTREE_H__
 
-#include "utils.h"
+#include <stdio.h>
+#include "vec.h"
 
 // A quadtree with a  capacity of 4 itmes per quad
 //    - the tree splits on the position of an item (not considering it's dimensions!)
