@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h> // getopt
 
 #include <math.h>
 #include <glad/glad.h>
@@ -32,15 +33,18 @@ const unsigned int WORLD_HEIGHT = 600;
 double then;
 
 #define POP_MAX 1000
-#define FPS 12.0
 
-// viewport
+// globals
 int width, height;
+unsigned int pop_len = POP_MAX;
+unsigned int fps = 32;
+unsigned int paused = 0;
 
 // Is called whenever a key is pressed/released via GLFW
 static void _key_callback(GLFWwindow* window, int key, int scancode, int action, int mode) {
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, GL_TRUE);
+    }
 }
 
 /**
@@ -58,9 +62,76 @@ static void _error_callback(int err, const char* message) {
     LOG_ERROR_F("GLFW Error (%d): %s", err, message);
 }
 
-int main() {
+
+/**
+ * key input callback
+ * @see https://www.glfw.org/docs/latest/input_guide.html#input_key
+ * @see https://www.glfw.org/docs/latest/group__keys.html
+ */
+static void _gl_key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+    if (action == GLFW_PRESS) {
+        switch (key) {
+        case GLFW_KEY_ESCAPE:
+        case GLFW_KEY_Q:
+            LOG_INFO("Closing app");
+            glfwSetWindowShouldClose(window, GL_TRUE);
+            break;
+        case GLFW_KEY_SPACE:
+            LOG_INFO("toggling pause");
+            paused = !paused;
+            break;
+        }
+    }
+}
+
+static void _configure(int argc, char **argv) {
+
+    int opt;
+    int ival;
+
+    char usage[] = "usage: %s [-h] [-p particles:number] [-f fps] [-P paused]\n";
+    while ((opt = getopt(argc, argv, "f:p:Ph")) != -1) {
+        switch (opt) {
+        case 'p':
+            ival = atoi(optarg);
+            if (!ival || ival < 0) {
+                fprintf(stderr, "invalid '%c' option value\n", opt);
+                exit(1);
+            }
+            if (ival > pop_len) {
+                fprintf(stderr, "invalid '%c' option value: pop > max (%d > %d)\n", opt, ival, pop_len);
+                exit(1);
+            }
+            pop_len = ival;
+            break;
+
+        case 'f':
+            ival = atoi(optarg);
+            if (!ival || ival < 0) {
+                fprintf(stderr, "invalid 'f' option value\n");
+                exit(1);
+            }
+            fps = ival;
+            break;
+
+        case 'P':
+            paused = 1;
+            break;
+
+        case 'h':
+        case '?':
+            fprintf(stderr, usage, argv[0]);
+            exit(0);
+            break;
+        }
+    }
+}
+
+int main(int argc, char **argv) {
     time_t seed = time(NULL);
     srand(seed); // set random seed
+
+    _configure(argc, argv);
 
     glfwSetErrorCallback(_error_callback);
 
@@ -90,6 +161,9 @@ int main() {
 
     glfwSetFramebufferSizeCallback(window, _framebuffer_size_callback);
 
+    // key events
+    glfwSetKeyCallback(window, _gl_key_callback);
+
     // enable points
     glEnable(GL_PROGRAM_POINT_SIZE);
 
@@ -105,20 +179,20 @@ int main() {
 
     bort_init_shaders(&bort);
     bort_init_matrices(&bort, model.m, view.m, projection.m);
-    bort_init_shaders_data(&bort, POP_MAX);
+    bort_init_shaders_data(&bort, pop_len);
 
     // uncomment this call to draw in wireframe polygons.
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // data
-    vec4 positions[POP_MAX];
-    rgba colors[POP_MAX];
+    vec4 positions[pop_len];
+    rgba colors[pop_len];
 
-    Borticle pop[POP_MAX];
+    Borticle pop[pop_len];
     float hw = (float) width / 2;
     float hh = (float) height / 2;
 
-    for (size_t i = 0; i < POP_MAX; i++) {
+    for (size_t i = 0; i < pop_len; i++) {
         pop[i].id = i;
         pop[i].pos = (vec3_t) {hw, hh, 0.f};
         pop[i].color = (rgba) {
@@ -142,7 +216,7 @@ int main() {
 
     // fps calc
     double now, delta;
-    double max = 1.0 / FPS;
+    double max = 1.0 / fps;
     then = glfwGetTime();
 
     // Game loop
@@ -152,6 +226,12 @@ int main() {
         if (now - then < max) {
             continue;
         }
+
+        if (paused) {
+            glfwPollEvents();
+            continue;
+        }
+
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -159,10 +239,10 @@ int main() {
         bort.vp_width = width;
         bort.vp_height = height;
         QNode *tree = qnode_create((rect){0.f, 0.f, (float)width, (float)height});
-        bort_update(&bort, tree, pop, positions, colors, POP_MAX);
+        bort_update(&bort, tree, pop, positions, colors, pop_len);
 
         // draw
-        bort_draw_2D(&bort, tree, pop, positions, colors, POP_MAX);
+        bort_draw_2D(&bort, tree, pop, positions, colors, pop_len);
 
         // finalize
         then = now;
