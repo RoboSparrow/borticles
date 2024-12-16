@@ -28,4 +28,9 @@ void bort_draw_2D(ShaderState *state, QNode *tree, Borticle pop[], vec4 position
 
 // exit
 void bort_cleanup_shaders(ShaderState *state);
+
+//
+void qtree_init_shaders(ShaderState *state);
+void qtree_draw_2D(QNode *tree, ShaderState *state);
+void qtree_cleanup_shaders(ShaderState *state);
 #endif

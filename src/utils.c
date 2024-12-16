@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 
 #include "log.h"
 #include "utils.h"
@@ -34,7 +36,7 @@ char *load_file_alloc(const char *path) {
 
     size_t len = fread(buffer, sizeof(char), len, fp);
     if (ferror(fp) != 0 ) {
-        LOG_ERROR_F("failed to allocate memory for file '%s'", path);
+        LOG_ERROR_F("error reading file '%s': '%s'", path, strerror(errno));
         freez(buffer);
         return NULL;
     }

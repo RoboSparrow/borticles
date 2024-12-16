@@ -5,6 +5,8 @@
 #include "external/math_3d.h"
 
 #include "utils.h"
+#include "log.h"
+
 #include "shader.h"
 #include "borticle.h"
 
@@ -15,7 +17,7 @@ typedef enum {
     BUF_NUM,
 } BufferObjects;
 
-void bort_init_shaders(ShaderState *state){
+void bort_init_shaders(ShaderState *state) {
     GLuint vert_sh = shader_load("shaders/borticle.vert", GL_VERTEX_SHADER);
     GLuint frag_sh = shader_load("shaders/borticle.frag", GL_FRAGMENT_SHADER);
     state->program = shader_program(vert_sh, frag_sh, 0);
@@ -38,6 +40,8 @@ void bort_init_shaders_data(ShaderState *state, unsigned int pop_len) {
         // x    y     z
         cx, cy, 0.0f,
     };
+
+    glUseProgram(state->program);
 
     glGenVertexArrays(1, state->vao);
     glGenBuffers(BUF_NUM, state->vbo);
@@ -64,6 +68,7 @@ void bort_init_shaders_data(ShaderState *state, unsigned int pop_len) {
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+    glUseProgram(0);
 }
 
 static void _update_size(ShaderState *state, Borticle *bort, size_t index) {
@@ -166,4 +171,144 @@ void bort_cleanup_shaders(ShaderState *state) {
     }
     glDeleteVertexArrays(1, state->vao);
     glDeleteBuffers(BUF_NUM, state->vbo);
+}
+
+
+////
+// rendering qtree
+////
+
+#define QTREE_RENDER_MAX 1000
+
+struct QuadArray {
+    vec4 quads[QTREE_RENDER_MAX];
+    size_t count;
+};
+
+static  void _make_quad_array(QNode *root, struct QuadArray *qa) {
+    if (qa->count >= QTREE_RENDER_MAX - 1) {
+        LOG_INFO_F("reached quad_array limits: %d\n", QTREE_RENDER_MAX);
+        return;
+    }
+    qa->quads[qa->count] = (vec4) {
+        root->area.x,
+        root->area.y,
+        root->area.width,
+        root->area.height
+    };
+    // printf("++++ (%ld) %d, %f, %f, %f, %f\n", qa->count, root->depth, root->area.x, root->area.y, root->area.width, root->area.height);
+    qa->count++;
+
+    if(root->nw != NULL) _make_quad_array(root->nw, qa);
+    if(root->ne != NULL) _make_quad_array(root->ne, qa);
+    if(root->sw != NULL) _make_quad_array(root->sw, qa);
+    if(root->se != NULL) _make_quad_array(root->se, qa);
+}
+
+void _print_quad_array(FILE *fp, struct QuadArray *quads) {
+    if (!fp) {
+        return;
+    }
+    if (!quads) {
+        fprintf(fp, "[]\n");
+        return;
+    }
+    fprintf(fp, "[\n");
+    for (size_t i = 0; i < quads->count; i++){
+        printf("  {#:%ld, x:%f, y:%f, w:%f, h:%f}\n", i, quads->quads[i].x, quads->quads[i].y, quads->quads[i].z, quads->quads[i].w);
+    }
+    fprintf(fp, "]\n");
+}
+
+
+void qtree_init_shaders(ShaderState *state) {
+    GLuint vsh = shader_load("shaders/qtree.vert", GL_VERTEX_SHADER);
+    GLuint fsh = shader_load("shaders/qtree.frag", GL_FRAGMENT_SHADER);
+    GLuint gsh = shader_load("shaders/qtree.geom", GL_GEOMETRY_SHADER);
+    state->program = shader_program(vsh, fsh, gsh);
+
+    glUseProgram(state->program);
+    float cx  = (float) state->vp_width / 2;
+    float cy  = (float) state->vp_height / 2;
+    float sz = 5.f;
+
+    float vertices[] = {
+        // x    y     z
+        cx, cy, 0.0f,
+    };
+
+    glUseProgram(state->program);
+
+    glGenVertexArrays(1, state->vao);
+    glGenBuffers(BUF_NUM, state->vbo);
+
+    // 1. bind the vao
+
+    glBindVertexArray(state->vao[0]);
+
+    // 2. bind the buffers
+
+    //  - vertices
+    glBindBuffer(GL_ARRAY_BUFFER, state->vbo[0]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    // - set up positions data (empty)
+    glBindBuffer(GL_ARRAY_BUFFER, state->vbo[1]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vec4) * QTREE_RENDER_MAX, NULL, GL_DYNAMIC_DRAW);
+
+    // 3. cleanup
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    glUseProgram(0);
+}
+
+/**
+ * prepares drawing to window
+ */
+void qtree_draw_2D(QNode *tree, ShaderState *state) {
+    if (!tree) {
+        return;
+    }
+
+    // update
+    struct QuadArray quads = {0};
+    if (tree) {
+        _make_quad_array(tree, &quads);
+    }
+    // _print_quad_array(stdout, &quads);
+
+    // draw
+    glUseProgram(state->program);
+    glBindVertexArray(state->vao[0]);
+
+    glVertexAttribDivisor(0, 0); // vertex
+    glVertexAttribDivisor(1, 1); // positions
+
+    // vertex
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, state->vbo[0]);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+
+    // positions
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, state->vbo[1]);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vec4) * quads.count, &quads.quads[0]);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    glDrawArraysInstanced(GL_POINTS, 0, 1, quads.count);
+
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+
+    glBindVertexArray(0);
+}
+
+
+void qtree_cleanup_shaders(ShaderState *state) {
+    if (!state) {
+        return;
+    }
+    glDeleteVertexArrays(1, state->vao);
+    glDeleteBuffers(2, state->vbo);
 }

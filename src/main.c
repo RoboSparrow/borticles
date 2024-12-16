@@ -128,6 +128,7 @@ static void _configure(int argc, char **argv) {
 }
 
 int main(int argc, char **argv) {
+
     time_t seed = time(NULL);
     srand(seed); // set random seed
 
@@ -137,8 +138,8 @@ int main(int argc, char **argv) {
 
     glfwInit();
     // Set all the required options for GLFW
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
@@ -185,10 +186,11 @@ int main(int argc, char **argv) {
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // data
-    vec4 positions[pop_len];
-    rgba colors[pop_len];
 
-    Borticle pop[pop_len];
+    vec4 positions[POP_MAX];
+    rgba colors[POP_MAX];
+    Borticle pop[POP_MAX];
+
     float hw = (float) width / 2;
     float hh = (float) height / 2;
 
@@ -213,6 +215,14 @@ int main(int argc, char **argv) {
         };
         pop[i].size = rand_range_f(0.1f, 6.f);
     }
+
+    // qtree shaders
+    ShaderState qt = {0};
+    qt.vp_width = width;
+    qt.vp_height = height;
+
+    qtree_init_shaders(&qt);
+    bort_init_matrices(&qt, model.m, view.m, projection.m);// TODO make common funcname name
 
     // fps calc
     double now, delta;
@@ -243,6 +253,7 @@ int main(int argc, char **argv) {
 
         // draw
         bort_draw_2D(&bort, tree, pop, positions, colors, pop_len);
+        qtree_draw_2D(tree, &qt);
 
         // finalize
         then = now;
@@ -254,6 +265,7 @@ int main(int argc, char **argv) {
 
     // cleanup
     bort_cleanup_shaders(&bort);
+    qtree_cleanup_shaders(&qt);
     glfwTerminate();
 
     return 0;
