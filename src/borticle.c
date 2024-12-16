@@ -10,8 +10,6 @@
 
 typedef enum {
     BUF_VERTEXES,
-    BUF_INDEXES,
-
     BUF_POSITIONS,
     BUF_COLORS,
     BUF_NUM,
@@ -38,15 +36,7 @@ void bort_init_shaders_data(ShaderState *state, unsigned int pop_len) {
 
     float vertices[] = {
         // x    y     z
-        cx     , cy + sz, 0.0f, // bottom left
-        cx + sz, cy + sz, 0.0f, // bottom right
-        cx + sz, cy     , 0.0f, // top right
-        cx     , cy     , 0.0f  // top left
-
-    };
-
-    GLuint indexes[] = {
-        1, 0, 2, 3
+        cx, cy, 0.0f,
     };
 
     glGenVertexArrays(1, state->vao);
@@ -61,10 +51,6 @@ void bort_init_shaders_data(ShaderState *state, unsigned int pop_len) {
     //  - vertices
     glBindBuffer(GL_ARRAY_BUFFER, state->vbo[BUF_VERTEXES]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    //  - indexes
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, state->vbo[BUF_INDEXES]);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indexes), &indexes[0], GL_STATIC_DRAW);
 
     // - set up positions data (empty)
     glBindBuffer(GL_ARRAY_BUFFER, state->vbo[BUF_POSITIONS]);
@@ -164,7 +150,7 @@ void bort_draw_2D(ShaderState *state, QNode *tree, Borticle pop[], vec4 position
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(rgba) * pop_len, &colors[0]);
     glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-    glDrawElementsInstanced(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_INT, 0, pop_len);
+    glDrawArraysInstanced(GL_POINTS, 0, 1, pop_len);
 
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);

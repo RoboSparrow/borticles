@@ -90,6 +90,9 @@ int main() {
 
     glfwSetFramebufferSizeCallback(window, _framebuffer_size_callback);
 
+    // enable points
+    glEnable(GL_PROGRAM_POINT_SIZE);
+
     // matrices
     mat4_t model = m4_identity();
     mat4_t view = m4_identity();
