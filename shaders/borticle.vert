@@ -16,6 +16,6 @@ void main() {
 
     gl_PointSize = positions.w;
 
-    vec4 pos = vec4(vertex, 1.0) + vec4(positions.xyz, 1.0);
+    vec4 pos = vec4(positions.xyz, 1.0);
     gl_Position = projection * view * model * pos;
 }
