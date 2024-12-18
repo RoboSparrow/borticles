@@ -178,10 +178,10 @@ void bort_cleanup_shaders(ShaderState *state) {
 // rendering qtree
 ////
 
-#define QTREE_RENDER_MAX 1000
+#define QTREE_RENDER_MAX 1000 * 4
 
 struct QuadArray {
-    vec4 quads[QTREE_RENDER_MAX];
+    vec2 quads[QTREE_RENDER_MAX];
     size_t count;
 };
 
@@ -190,14 +190,36 @@ static  void _make_quad_array(QNode *root, struct QuadArray *qa) {
         LOG_INFO_F("reached quad_array limits: %d\n", QTREE_RENDER_MAX);
         return;
     }
-    qa->quads[qa->count] = (vec4) {
+
+    // self: nw
+    qa->quads[qa->count] = (vec2) {
         root->area.x,
         root->area.y,
-        root->area.width,
-        root->area.height
     };
-    // printf("++++ (%ld) %d, %f, %f, %f, %f\n", qa->count, root->depth, root->area.x, root->area.y, root->area.width, root->area.height);
     qa->count++;
+
+    // self: ne
+    qa->quads[qa->count] = (vec2) {
+        root->area.x + root->area.width,
+        root->area.y,
+    };
+    qa->count++;
+
+    // self: se
+    qa->quads[qa->count] = (vec2) {
+        root->area.x + root->area.width,
+        root->area.y + root->area.height,
+    };
+    qa->count++;
+
+    // self: sw
+    qa->quads[qa->count] = (vec2) {
+        root->area.x,
+        root->area.y + root->area.height,
+    };
+    qa->count++;
+
+    // printf("++++ (%ld) %d, %f, %f, %f, %f\n", qa->count, root->depth, root->area.x, root->area.y, root->area.width, root->area.height);
 
     if(root->nw != NULL) _make_quad_array(root->nw, qa);
     if(root->ne != NULL) _make_quad_array(root->ne, qa);
@@ -213,32 +235,45 @@ void _print_quad_array(FILE *fp, struct QuadArray *quads) {
         fprintf(fp, "[]\n");
         return;
     }
-    fprintf(fp, "[\n");
+    fprintf(fp, "[");
     for (size_t i = 0; i < quads->count; i++){
-        printf("  {#:%ld, x:%f, y:%f, w:%f, h:%f}\n", i, quads->quads[i].x, quads->quads[i].y, quads->quads[i].z, quads->quads[i].w);
+        if (i % 4 == 0){
+            fprintf(fp, "\n    ");
+        }
+        fprintf(fp, "{#:%ld, x:%f, y:%f}%s", i, quads->quads[i].x, quads->quads[i].y, (i < quads->count -1) ? ", " : "");
     }
-    fprintf(fp, "]\n");
+    fprintf(fp, "\n]\n");
 }
 
 
 void qtree_init_shaders(ShaderState *state) {
     GLuint vsh = shader_load("shaders/qtree.vert", GL_VERTEX_SHADER);
     GLuint fsh = shader_load("shaders/qtree.frag", GL_FRAGMENT_SHADER);
-    GLuint gsh = shader_load("shaders/qtree.geom", GL_GEOMETRY_SHADER);
+    GLuint gsh = 0; // shader_load("shaders/qtree.geom", GL_GEOMETRY_SHADER);
     state->program = shader_program(vsh, fsh, gsh);
 
     glUseProgram(state->program);
-    float cx  = (float) state->vp_width / 2;
-    float cy  = (float) state->vp_height / 2;
-    float sz = 5.f;
+    float cx  = 0.f;
+    float cy  = 0.f;
+    float hw = 5.f;
+    float hh = 5.f;
 
     float vertices[] = {
         // x    y     z
-        cx, cy, 0.0f,
+        cx - hw , cy - hh, 0.0f, // nw
+        cx + hw,  cy - hh, 0.0f, // ne
+        cx + hw,  cy + hh, 0.0f, // se
+        cx - hw,  cy + hh, 0.0f, // sw
+
+    };
+
+    GLuint indexes[] = {
+        0, 1, 2, // first triangle
+        0, 3, 2  // second triangle
     };
 
     glGenVertexArrays(1, state->vao);
-    glGenBuffers(BUF_NUM, state->vbo);
+    glGenBuffers(3, state->vbo);
 
     // 1. bind the vao
 
@@ -250,9 +285,13 @@ void qtree_init_shaders(ShaderState *state) {
     glBindBuffer(GL_ARRAY_BUFFER, state->vbo[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+    //  - indexes
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, state->vbo[1]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indexes), indexes, GL_STATIC_DRAW);
+
     // - set up positions data (empty)
-    glBindBuffer(GL_ARRAY_BUFFER, state->vbo[1]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vec4) * QTREE_RENDER_MAX, NULL, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, state->vbo[2]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vec2) * QTREE_RENDER_MAX, NULL, GL_DYNAMIC_DRAW);
 
     // 3. cleanup
 
@@ -274,27 +313,29 @@ void qtree_draw_2D(QNode *tree, ShaderState *state) {
     if (tree) {
         _make_quad_array(tree, &quads);
     }
-    // _print_quad_array(stdout, &quads);
+    //_print_quad_array(stdout, &quads);
 
     // draw
     glUseProgram(state->program);
     glBindVertexArray(state->vao[0]);
 
     glVertexAttribDivisor(0, 0); // vertex
-    glVertexAttribDivisor(1, 1); // positions
+    glVertexAttribDivisor(1, 1); // position
 
     // vertex
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, state->vbo[0]);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 
+    // not touching vbo[1] (indexes)
+
     // positions
     glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, state->vbo[1]);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vec4) * quads.count, &quads.quads[0]);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, state->vbo[2]);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vec2) * quads.count, &quads.quads[0]);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-    glDrawArraysInstanced(GL_POINTS, 0, 1, quads.count);
+    glDrawElementsInstanced(GL_LINE_STRIP, 6, GL_UNSIGNED_INT, 0, quads.count);
 
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
