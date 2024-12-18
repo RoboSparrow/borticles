@@ -181,43 +181,43 @@ void bort_cleanup_shaders(ShaderState *state) {
 #define QTREE_RENDER_MAX 1000 * 4
 
 struct QuadArray {
-    vec2 quads[QTREE_RENDER_MAX];
-    size_t count;
+    vec2 vertexes[QTREE_RENDER_MAX];
+    size_t v_count;
 };
 
 static  void _make_quad_array(QNode *root, struct QuadArray *qa) {
-    if (qa->count >= QTREE_RENDER_MAX - 1) {
+    if (qa->v_count >= QTREE_RENDER_MAX - 1) {
         LOG_INFO_F("reached quad_array limits: %d\n", QTREE_RENDER_MAX);
         return;
     }
 
     // self: nw
-    qa->quads[qa->count] = (vec2) {
+    qa->vertexes[qa->v_count] = (vec2) {
         root->area.x,
         root->area.y,
     };
-    qa->count++;
+    qa->v_count++;
 
     // self: ne
-    qa->quads[qa->count] = (vec2) {
+    qa->vertexes[qa->v_count] = (vec2) {
         root->area.x + root->area.width,
         root->area.y,
     };
-    qa->count++;
+    qa->v_count++;
 
     // self: se
-    qa->quads[qa->count] = (vec2) {
+    qa->vertexes[qa->v_count] = (vec2) {
         root->area.x + root->area.width,
         root->area.y + root->area.height,
     };
-    qa->count++;
+    qa->v_count++;
 
     // self: sw
-    qa->quads[qa->count] = (vec2) {
+    qa->vertexes[qa->v_count] = (vec2) {
         root->area.x,
         root->area.y + root->area.height,
     };
-    qa->count++;
+    qa->v_count++;
 
     // printf("++++ (%ld) %d, %f, %f, %f, %f\n", qa->count, root->depth, root->area.x, root->area.y, root->area.width, root->area.height);
 
@@ -236,11 +236,11 @@ void _print_quad_array(FILE *fp, struct QuadArray *quads) {
         return;
     }
     fprintf(fp, "[");
-    for (size_t i = 0; i < quads->count; i++){
+    for (size_t i = 0; i < quads->v_count; i++){
         if (i % 4 == 0){
             fprintf(fp, "\n    ");
         }
-        fprintf(fp, "{#:%ld, x:%f, y:%f}%s", i, quads->quads[i].x, quads->quads[i].y, (i < quads->count -1) ? ", " : "");
+        fprintf(fp, "{#:%ld, x:%f, y:%f}%s", i, quads->vertexes[i].x, quads->vertexes[i].y, (i < quads->v_count -1) ? ", " : "");
     }
     fprintf(fp, "\n]\n");
 }
@@ -332,10 +332,10 @@ void qtree_draw_2D(QNode *tree, ShaderState *state) {
     // positions
     glEnableVertexAttribArray(1);
     glBindBuffer(GL_ARRAY_BUFFER, state->vbo[2]);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vec2) * quads.count, &quads.quads[0]);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vec2) * quads.v_count, &quads.vertexes[0]);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-    glDrawElementsInstanced(GL_LINE_STRIP, 6, GL_UNSIGNED_INT, 0, quads.count);
+    glDrawElementsInstanced(GL_LINE_STRIP, 6, GL_UNSIGNED_INT, 0, quads.v_count);
 
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
