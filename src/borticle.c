@@ -237,8 +237,6 @@ void qtree_init_shaders(ShaderState *state) {
         cx, cy, 0.0f,
     };
 
-    glUseProgram(state->program);
-
     glGenVertexArrays(1, state->vao);
     glGenBuffers(BUF_NUM, state->vbo);
 
