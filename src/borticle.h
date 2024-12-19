@@ -11,8 +11,8 @@
 typedef struct {
     unsigned int id;
     vec3_t pos, vel, acc;
-    float size;
-    rgba  color;
+    float size;  // TODO replace with pointer to flat array
+    rgba  color; // TODO replace with pointer to flat array
 } Borticle;
 
 // init

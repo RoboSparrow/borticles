@@ -1,8 +1,3 @@
-// https://learnopengl.com/Advanced-OpenGL/Instancing
-// https://www.opengl-tutorial.org/intermediate-tutorials/billboards-particles/particles-instancing/
-
-// “Instancing” means that we have a base mesh (in our case, a simple quad of 2 triangles), but many instances of this quad.
-
 ////
 // clear && make clean && make && ./bin/borticles
 ////
@@ -133,11 +128,10 @@ int main(int argc, char **argv) {
     srand(seed); // set random seed
 
     _configure(argc, argv);
-
     glfwSetErrorCallback(_error_callback);
 
+    // glfw
     glfwInit();
-    // Set all the required options for GLFW
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -147,9 +141,7 @@ int main(int argc, char **argv) {
     GLFWwindow* window = glfwCreateWindow(WORLD_WIDTH, WORLD_HEIGHT, "Borticles", NULL, NULL);
     glfwMakeContextCurrent(window);
 
-    //callbacks
-    glfwSetKeyCallback(window, _key_callback);
-
+    // glad
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         LOG_ERROR("Failed to initialize GLAD");
         glfwTerminate();
@@ -160,12 +152,11 @@ int main(int argc, char **argv) {
     glfwGetFramebufferSize(window, &width, &height);
     glViewport(0, 0, width, height);
 
+    // glfw events
     glfwSetFramebufferSizeCallback(window, _framebuffer_size_callback);
-
-    // key events
     glfwSetKeyCallback(window, _gl_key_callback);
 
-    // enable points
+    // we will render point sizes
     glEnable(GL_PROGRAM_POINT_SIZE);
 
     // matrices
@@ -182,11 +173,7 @@ int main(int argc, char **argv) {
     bort_init_matrices(&bort, model.m, view.m, projection.m);
     bort_init_shaders_data(&bort, pop_len);
 
-    // uncomment this call to draw in wireframe polygons.
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-    // data
-
+    // borticle data
     vec4 positions[POP_MAX];
     rgba colors[POP_MAX];
     Borticle pop[POP_MAX];
@@ -229,7 +216,6 @@ int main(int argc, char **argv) {
     double max = 1.0 / fps;
     then = glfwGetTime();
 
-    // Game loop
     while (!glfwWindowShouldClose(window)) {
         // init
         now = glfwGetTime();
