@@ -1,7 +1,7 @@
 #ifndef __SHADER_H__
 #define __SHADER_H__
 
-typedef struct ShaderState {
+typedef struct Shader {
     GLuint program;
     GLuint vao[5];
     GLuint vbo[5];
@@ -14,11 +14,7 @@ typedef struct ShaderState {
     float mat_model[4][4];
     float mat_view[4][4];
     float mat_projection[4][4];
-
-    // viewport
-    int vp_width;
-    int vp_height;
-} ShaderState;
+} Shader;
 
 unsigned int shader_load(const char *path, int type);
 int shader_set_uniform_mat4(unsigned int program, char *name, float mat[4][4]);

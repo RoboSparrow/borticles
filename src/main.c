@@ -165,13 +165,10 @@ int main(int argc, char **argv) {
     mat4_t projection = m4_ortho(0.f, (float) state->width, (float) state->height, 0.f, 0.f, 1.f);
 
     // borticle shaders
-    ShaderState bort = {0};
-    bort.vp_width = state->width; // TODO  replace w state
-    bort.vp_height = state->height;
-
+    Shader bort = {0};
     bort_init_shaders(&bort);
     bort_init_matrices(&bort, model.m, view.m, projection.m);
-    bort_init_shaders_data(&bort, state->pop_len);
+    bort_init_shaders_data(&bort, state);
 
     float hw = (float) state->width / 2;
     float hh = (float) state->height / 2;
@@ -199,10 +196,7 @@ int main(int argc, char **argv) {
     }
 
     // qtree shaders
-    ShaderState qt = {0};
-    qt.vp_width = state->width; // TODO  replace w state
-    qt.vp_height = state->height;
-
+    Shader qt = {0};
     qtree_init_shaders(&qt);
     bort_init_matrices(&qt, model.m, view.m, projection.m);// TODO make common funcname name
 
@@ -227,15 +221,13 @@ int main(int argc, char **argv) {
         glClear(GL_COLOR_BUFFER_BIT);
 
         // update
-        bort.vp_width = state->width; // TODO  replace w state
-        bort.vp_height = state->height;
         state->tree = qnode_create((rect){0.f, 0.f, (float)state->width, (float)state->height});
-        bort_update(&bort, state->tree, state->population, state->positions, state->colors, state->pop_len);
+        bort_update(&bort, state);
         // state_print(stdout, state);
 
         // draw
-        bort_draw_2D(&bort, state->tree, state->population, state->positions, state->colors, state->pop_len);
-        qtree_draw_2D(state->tree, &qt);
+        bort_draw_2D(&bort, state);
+        qtree_draw_2D(&qt, state);
 
         // finalize
         then = now;

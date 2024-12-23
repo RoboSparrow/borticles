@@ -2,14 +2,16 @@
 #ifndef __STATE_H__
 #define __STATE_H__
 
+#include <stdio.h>
+
 #include "borticle.h"
+#include "quadtree.h"
 #include "vec.h"
 
 #define WORLD_WIDTH 800
 #define WORLD_HEIGHT 600
 
 #define POP_MAX 1000
-
 
 typedef struct State {
     int width, height;

@@ -9,6 +9,7 @@
 
 #include "shader.h"
 #include "borticle.h"
+#include "state.h"
 
 typedef enum {
     BUF_VERTEXES,
@@ -17,23 +18,23 @@ typedef enum {
     BUF_NUM,
 } BufferObjects;
 
-void bort_init_shaders(ShaderState *state) {
+void bort_init_shaders(Shader *shader) {
     GLuint vert_sh = shader_load("shaders/borticle.vert", GL_VERTEX_SHADER);
     GLuint frag_sh = shader_load("shaders/borticle.frag", GL_FRAGMENT_SHADER);
-    state->program = shader_program(vert_sh, frag_sh, 0);
+    shader->program = shader_program(vert_sh, frag_sh, 0);
 }
 
-void bort_init_matrices(ShaderState *state, float model[4][4], float view[4][4], float projection[4][4]) {
-    glUseProgram(state->program);
-    state->loc_model      = shader_set_uniform_mat4(state->program, "model", model);
-    state->loc_view       = shader_set_uniform_mat4(state->program, "view", view);
-    state->loc_projection = shader_set_uniform_mat4(state->program, "projection", projection);
+void bort_init_matrices(Shader *shader, float model[4][4], float view[4][4], float projection[4][4]) {
+    glUseProgram(shader->program);
+    shader->loc_model      = shader_set_uniform_mat4(shader->program, "model", model);
+    shader->loc_view       = shader_set_uniform_mat4(shader->program, "view", view);
+    shader->loc_projection = shader_set_uniform_mat4(shader->program, "projection", projection);
     glUseProgram(0);
 }
 
-void bort_init_shaders_data(ShaderState *state, unsigned int pop_len) {
-    float cx  = (float) state->vp_width / 2;
-    float cy  = (float) state->vp_height / 2;
+void bort_init_shaders_data(Shader *shader, State *state) {
+    float cx  = (float) state->width / 2;
+    float cy  = (float) state->height / 2;
     float sz = 5.f;
 
     float vertices[] = {
@@ -41,28 +42,28 @@ void bort_init_shaders_data(ShaderState *state, unsigned int pop_len) {
         cx, cy, 0.0f,
     };
 
-    glUseProgram(state->program);
+    glUseProgram(shader->program);
 
-    glGenVertexArrays(1, state->vao);
-    glGenBuffers(BUF_NUM, state->vbo);
+    glGenVertexArrays(1, shader->vao);
+    glGenBuffers(BUF_NUM, shader->vbo);
 
     // 1. bind the vao
 
-    glBindVertexArray(state->vao[0]);
+    glBindVertexArray(shader->vao[0]);
 
     // 2. bind the buffers
 
     //  - vertices
-    glBindBuffer(GL_ARRAY_BUFFER, state->vbo[BUF_VERTEXES]);
+    glBindBuffer(GL_ARRAY_BUFFER, shader->vbo[BUF_VERTEXES]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     // - set up positions data (empty)
-    glBindBuffer(GL_ARRAY_BUFFER, state->vbo[BUF_POSITIONS]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vec4) * pop_len, NULL, GL_DYNAMIC_DRAW);    // NULL (empty) buffer
+    glBindBuffer(GL_ARRAY_BUFFER, shader->vbo[BUF_POSITIONS]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vec4) * state->pop_len, NULL, GL_DYNAMIC_DRAW);    // NULL (empty) buffer
 
     // - set up colors data (empty)
-    glBindBuffer(GL_ARRAY_BUFFER, state->vbo[BUF_COLORS]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(rgba) * pop_len, NULL, GL_STREAM_DRAW);    // NULL (empty) buffer
+    glBindBuffer(GL_ARRAY_BUFFER, shader->vbo[BUF_COLORS]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(rgba) * state->pop_len, NULL, GL_STREAM_DRAW);    // NULL (empty) buffer
 
     // 3. cleanup
 
@@ -71,10 +72,9 @@ void bort_init_shaders_data(ShaderState *state, unsigned int pop_len) {
     glUseProgram(0);
 }
 
-static void _update_size(ShaderState *state, Borticle *bort, size_t index) {
-}
+static void _update_size(Shader *shader, State *state, Borticle *bort, size_t index) {}
 
-static void _update_position(ShaderState *state, Borticle *bort, size_t index) {
+static void _update_position(Shader *shader, State *state, Borticle *bort, size_t index) {
     float dirx = (bort->vel.x > 0) ? 1 : -1;
     float diry = (bort->vel.y > 0) ? 1 : -1;
 
@@ -85,49 +85,62 @@ static void _update_position(ShaderState *state, Borticle *bort, size_t index) {
     bort->pos.y += bort->vel.y;
     if (
            bort->pos.x < 0
-        || bort->pos.x > state->vp_width
+        || bort->pos.x > state->width
         || bort->pos.y < 0
-        || bort->pos.y > state->vp_height
+        || bort->pos.y > state->height
     ) {
         // reset
-        bort->pos.x = state->vp_width / 2.f;
-        bort->pos.y = state->vp_height / 2.f;
+        bort->pos.x = state->width / 2.f;
+        bort->pos.y = state->height / 2.f;
         bort->vel.x = rand_range_f(-10.f, 10.f);
         bort->vel.y = rand_range_f(-10.f, 10.f);
     }
     //printf("%d {%f,%f}\n", bort->id, bort->pos.x, bort->pos.y);
 }
 
-static void _update_color(ShaderState *state, Borticle *bort, size_t index) {}
+static void _update_color(Shader *shader, State *state, Borticle *bort, size_t index) {}
 
-void bort_update(ShaderState *state, QNode *tree, Borticle pop[], vec4 positions[], rgba colors[], size_t pop_len) {
-    if (!pop) {
-        return;
-    }
+void bort_update(Shader *shader, State *state) {
+    Borticle *bort;
 
-    for (size_t i = 0; i < pop_len; i++) {
+    for (size_t i = 0; i < state->pop_len; i++) {
+        bort = &state->population[i];
+
         // update bort TODO accl, vel
-        _update_size(state, &pop[i], i);
-        _update_position(state, &pop[i], i);
-        _update_color(state, &pop[i], i);
+        _update_size(shader, state, bort, i);
+        _update_position(shader, state, bort, i);
+        _update_color(shader, state, bort, i);
 
         // update vertex data for vbos
-        positions[i] = (vec4) {pop[i].pos.x, pop[i].pos.y, pop[i].pos.z, pop[i].size};
-        colors[i] = pop[i].color;
+        state->positions[i] = (vec4) {
+            bort->pos.x,
+            bort->pos.y,
+            bort->pos.z,
+            bort->size
+        };
+        state->colors[i] = bort->color;
 
-        qnode_insert(tree, (vec2) {pop[i].pos.x, pop[i].pos.y}, pop[i].id);
+        // insert boricle into qtree
+        qnode_insert(
+            state->tree,
+            (vec2) {
+                bort->pos.x,
+                bort->pos.y
+            },
+            state->population[i].id
+        );
     }
 }
 
 /**
  * prepares drawing to window
  */
-void bort_draw_2D(ShaderState *state, QNode *tree, Borticle pop[], vec4 positions[], rgba colors[], size_t pop_len) {
-    if (!state || !tree) {
+void bort_draw_2D(Shader *shader, State *state) {
+    if (!shader) {
         return;
     }
-    glUseProgram(state->program);
-    glBindVertexArray(state->vao[0]);
+    glUseProgram(shader->program);
+    glBindVertexArray(shader->vao[0]);
 
     glVertexAttribDivisor(0, 0); // vertex
     glVertexAttribDivisor(1, 1); // positions
@@ -135,22 +148,22 @@ void bort_draw_2D(ShaderState *state, QNode *tree, Borticle pop[], vec4 position
 
     // vertex
     glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, state->vbo[BUF_VERTEXES]);
+    glBindBuffer(GL_ARRAY_BUFFER, shader->vbo[BUF_VERTEXES]);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0); // 3 points, float data, no rgba
 
     // positions
     glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, state->vbo[BUF_POSITIONS]);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vec4) * pop_len, &positions[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, shader->vbo[BUF_POSITIONS]);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vec4) * state->pop_len, &state->positions[0]);
     glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
     // colors
     glEnableVertexAttribArray(2);
-    glBindBuffer(GL_ARRAY_BUFFER, state->vbo[BUF_COLORS]);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(rgba) * pop_len, &colors[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, shader->vbo[BUF_COLORS]);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(rgba) * state->pop_len, &state->colors[0]);
     glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-    glDrawArraysInstanced(GL_POINTS, 0, 1, pop_len);
+    glDrawArraysInstanced(GL_POINTS, 0, 1, state->pop_len);
 
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
@@ -160,12 +173,12 @@ void bort_draw_2D(ShaderState *state, QNode *tree, Borticle pop[], vec4 position
     glUseProgram(0);
 }
 
-void bort_cleanup_shaders(ShaderState *state) {
-    if (!state) {
+void bort_cleanup_shaders(Shader *shader) {
+    if (!shader) {
         return;
     }
-    glDeleteVertexArrays(1, state->vao);
-    glDeleteBuffers(BUF_NUM, state->vbo);
+    glDeleteVertexArrays(1, shader->vao);
+    glDeleteBuffers(BUF_NUM, shader->vbo);
 }
 
 
@@ -258,22 +271,22 @@ void _print_quad_array(FILE *fp, struct QuadArray *quads) {
     fprintf(fp, "\n]\n");
 }
 
-void qtree_init_shaders(ShaderState *state) {
+void qtree_init_shaders(Shader *shader) {
     GLuint vsh = shader_load("shaders/qtree.vert", GL_VERTEX_SHADER);
     GLuint fsh = shader_load("shaders/qtree.frag", GL_FRAGMENT_SHADER);
     GLuint gsh = 0;
-    state->program = shader_program(vsh, fsh, gsh);
+    shader->program = shader_program(vsh, fsh, gsh);
 
-    glUseProgram(state->program);
+    glUseProgram(shader->program);
 
-    glGenVertexArrays(1, state->vao);
-    glGenBuffers(3, state->vbo);
+    glGenVertexArrays(1, shader->vao);
+    glGenBuffers(3, shader->vbo);
 
     //bind the vao
-    glBindVertexArray(state->vao[0]);
+    glBindVertexArray(shader->vao[0]);
 
     // bind the buffers
-    glBindBuffer(GL_ARRAY_BUFFER, state->vbo[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, shader->vbo[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vec2) * QTREE_RENDER_MAX, NULL, GL_DYNAMIC_DRAW);
 
     // cleanup
@@ -285,24 +298,20 @@ void qtree_init_shaders(ShaderState *state) {
 /**
  * prepares drawing to window
  */
-void qtree_draw_2D(QNode *tree, ShaderState *state) {
-    if (!tree) {
-        return;
-    }
-
+void qtree_draw_2D(Shader *shader, State *state) {
     // update
     struct QuadArray quads = {0};
-    if (tree) {
-        _make_quad_array(tree, &quads);
+    if (state->tree) {
+        _make_quad_array(state->tree, &quads);
     }
     // _print_quad_array(stdout, &quads);
 
     // draw
-    glUseProgram(state->program);
-    glBindVertexArray(state->vao[0]);
+    glUseProgram(shader->program);
+    glBindVertexArray(shader->vao[0]);
 
     // positions
-    glBindBuffer(GL_ARRAY_BUFFER, state->vbo[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, shader->vbo[0]);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vec2) * quads.v_count, &quads.vertexes[0]);
 
     GLenum mode = GL_LINES;
@@ -316,10 +325,10 @@ void qtree_draw_2D(QNode *tree, ShaderState *state) {
     glBindVertexArray(0);
 }
 
-void qtree_cleanup_shaders(ShaderState *state) {
-    if (!state) {
+void qtree_cleanup_shaders(Shader *shader) {
+    if (!shader) {
         return;
     }
-    glDeleteVertexArrays(1, state->vao);
-    glDeleteBuffers(2, state->vbo);
+    glDeleteVertexArrays(1, shader->vao);
+    glDeleteBuffers(2, shader->vbo);
 }

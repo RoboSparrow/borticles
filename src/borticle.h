@@ -8,6 +8,8 @@
 #include "quadtree.h"
 #include "shader.h"
 
+typedef struct State State;
+
 typedef struct {
     unsigned int id;
     vec3_t pos, vel, acc;
@@ -16,21 +18,21 @@ typedef struct {
 } Borticle;
 
 // init
-void bort_init_shaders(ShaderState *state);
-void bort_init_matrices(ShaderState *state, float model[4][4], float view[4][4], float projection[4][4]);
-void bort_init_shaders_data(ShaderState *state, unsigned int pop_len);
+void bort_init_shaders(Shader *shader);
+void bort_init_matrices(Shader *shader, float model[4][4], float view[4][4], float projection[4][4]);
+void bort_init_shaders_data(Shader *shader, State *state);
 
 // update
-void bort_update(ShaderState *state, QNode *tree, Borticle pop[], vec4 positions[], rgba colors[], size_t pop_len);
+void bort_update(Shader *shader, State *state);
 
 // draw
-void bort_draw_2D(ShaderState *state, QNode *tree, Borticle pop[], vec4 positions[], rgba colors[], size_t pop_len);
+void bort_draw_2D(Shader *shader, State *state);
 
 // exit
-void bort_cleanup_shaders(ShaderState *state);
+void bort_cleanup_shaders(Shader *shader);
 
 //
-void qtree_init_shaders(ShaderState *state);
-void qtree_draw_2D(QNode *tree, ShaderState *state);
-void qtree_cleanup_shaders(ShaderState *state);
+void qtree_init_shaders(Shader *shader);
+void qtree_draw_2D(Shader *shader, State *state);
+void qtree_cleanup_shaders(Shader *shader);
 #endif
