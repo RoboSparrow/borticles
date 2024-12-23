@@ -2,6 +2,7 @@
 
 #include "state.h"
 #include "borticle.h"
+#include "quadtree.h"
 #include "vec.h"
 
 #include "utils.h"
@@ -50,6 +51,11 @@ void state_set_len(State *state, unsigned int len) {
 
     state->colors = realloc(state->colors, len * sizeof(rgba));
     EXIT_IF(state->colors == NULL, "failed to (re)allocate for State->colors");
+
+    // also destroy the actual qtree
+    qnode_destroy(state->tree);
+    state->tree= NULL;
+
 }
 
 void state_destroy(State *state) {
@@ -60,6 +66,7 @@ void state_destroy(State *state) {
     freez(state->population);
     freez(state->positions);
     freez(state->colors);
+    qnode_destroy(state->tree);
 
     freez(state);
 }

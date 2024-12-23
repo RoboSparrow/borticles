@@ -19,7 +19,9 @@ typedef struct State {
 
     unsigned int pop_max;
     unsigned int pop_len;
+
     Borticle *population;
+    QNode *tree;
 
     // vbos
     vec4 *positions;

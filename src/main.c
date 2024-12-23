@@ -229,17 +229,17 @@ int main(int argc, char **argv) {
         // update
         bort.vp_width = state->width; // TODO  replace w state
         bort.vp_height = state->height;
-        QNode *tree = qnode_create((rect){0.f, 0.f, (float)state->width, (float)state->height});
-        bort_update(&bort, tree, state->population, state->positions, state->colors, state->pop_len);
+        state->tree = qnode_create((rect){0.f, 0.f, (float)state->width, (float)state->height});
+        bort_update(&bort, state->tree, state->population, state->positions, state->colors, state->pop_len);
         // state_print(stdout, state);
 
         // draw
-        bort_draw_2D(&bort, tree, state->population, state->positions, state->colors, state->pop_len);
-        qtree_draw_2D(tree, &qt);
+        bort_draw_2D(&bort, state->tree, state->population, state->positions, state->colors, state->pop_len);
+        qtree_draw_2D(state->tree, &qt);
 
         // finalize
         then = now;
-        qnode_destroy(tree);
+        qnode_destroy(state->tree);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
