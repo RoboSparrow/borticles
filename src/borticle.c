@@ -95,7 +95,7 @@ static void _update_position(ShaderState *state, Borticle *bort, size_t index) {
         bort->vel.x = rand_range_f(-10.f, 10.f);
         bort->vel.y = rand_range_f(-10.f, 10.f);
     }
-    // printf("%d {%f,%f}\n", bort->id, bort->pos.x, bort->pos.y);
+    //printf("%d {%f,%f}\n", bort->id, bort->pos.x, bort->pos.y);
 }
 
 static void _update_color(ShaderState *state, Borticle *bort, size_t index) {}

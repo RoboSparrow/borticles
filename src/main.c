@@ -2,7 +2,6 @@
 // clear && make clean && make && ./bin/borticles
 ////
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -17,23 +16,14 @@
 
 #include "borticle.h"
 #include "quadtree.h"
+#include "state.h"
 
 #define MATH_3D_IMPLEMENTATION
 #include "external/math_3d.h"
 
-// settings
-const unsigned int WORLD_WIDTH = 800;
-const unsigned int WORLD_HEIGHT = 600;
-
+// globals
 double then;
 
-#define POP_MAX 1000
-
-// globals
-int width, height;
-unsigned int pop_len = POP_MAX;
-unsigned int fps = 32;
-unsigned int paused = 0;
 
 // Is called whenever a key is pressed/released via GLFW
 static void _key_callback(GLFWwindow* window, int key, int scancode, int action, int mode) {
@@ -47,10 +37,11 @@ static void _key_callback(GLFWwindow* window, int key, int scancode, int action,
  *      make sure the viewport matches the new window dimensions; note that width and
  *      height will be significantly larger than specified on retina displays.
  */
-static void _framebuffer_size_callback(GLFWwindow* window, int w, int h) {
-    width = w;
-    height = h;
-    glViewport(0, 0, width, height);
+static void _framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+    State *state = (State*)glfwGetWindowUserPointer(window);
+    state->width = width;
+    state->height = height;
+    glViewport(0, 0, state->width, state->height);
 }
 
 static void _error_callback(int err, const char* message) {
@@ -64,6 +55,9 @@ static void _error_callback(int err, const char* message) {
  * @see https://www.glfw.org/docs/latest/group__keys.html
  */
 static void _gl_key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+
+    State *state = (State*)glfwGetWindowUserPointer(window);
+
     if (action == GLFW_PRESS) {
         switch (key) {
         case GLFW_KEY_ESCAPE:
@@ -73,16 +67,17 @@ static void _gl_key_callback(GLFWwindow *window, int key, int scancode, int acti
             break;
         case GLFW_KEY_SPACE:
             LOG_INFO("toggling pause");
-            paused = !paused;
+            state->paused = !state->paused;
             break;
         }
     }
 }
 
-static void _configure(int argc, char **argv) {
+static void _configure(State *state, int argc, char **argv) {
 
     int opt;
     int ival;
+    unsigned int pop_len = POP_MAX;
 
     char usage[] = "usage: %s [-h] [-p particles:number] [-f fps] [-P paused]\n";
     while ((opt = getopt(argc, argv, "f:p:Ph")) != -1) {
@@ -93,10 +88,7 @@ static void _configure(int argc, char **argv) {
                 fprintf(stderr, "invalid '%c' option value\n", opt);
                 exit(1);
             }
-            if (ival > pop_len) {
-                fprintf(stderr, "invalid '%c' option value: pop > max (%d > %d)\n", opt, ival, pop_len);
-                exit(1);
-            }
+
             pop_len = ival;
             break;
 
@@ -106,11 +98,12 @@ static void _configure(int argc, char **argv) {
                 fprintf(stderr, "invalid 'f' option value\n");
                 exit(1);
             }
-            fps = ival;
+
+            state->fps = ival;
             break;
 
         case 'P':
-            paused = 1;
+            state->paused = 1;
             break;
 
         case 'h':
@@ -120,6 +113,8 @@ static void _configure(int argc, char **argv) {
             break;
         }
     }
+
+    state_set_len(state, pop_len);
 }
 
 int main(int argc, char **argv) {
@@ -127,7 +122,9 @@ int main(int argc, char **argv) {
     time_t seed = time(NULL);
     srand(seed); // set random seed
 
-    _configure(argc, argv);
+    State *state = state_create();
+    _configure(state, argc, argv);
+
     glfwSetErrorCallback(_error_callback);
 
     // glfw
@@ -138,8 +135,11 @@ int main(int argc, char **argv) {
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
     // window
-    GLFWwindow* window = glfwCreateWindow(WORLD_WIDTH, WORLD_HEIGHT, "Borticles", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(state->width, state->height, "Borticles", NULL, NULL);
     glfwMakeContextCurrent(window);
+
+    // store up for callback updates
+    glfwSetWindowUserPointer(window, state);
 
     // glad
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -149,8 +149,8 @@ int main(int argc, char **argv) {
     }
 
     // viewport
-    glfwGetFramebufferSize(window, &width, &height);
-    glViewport(0, 0, width, height);
+    glfwGetFramebufferSize(window, &state->width, &state->height);
+    glViewport(0, 0, state->width, state->height);
 
     // glfw events
     glfwSetFramebufferSizeCallback(window, _framebuffer_size_callback);
@@ -162,58 +162,53 @@ int main(int argc, char **argv) {
     // matrices
     mat4_t model = m4_identity();
     mat4_t view = m4_identity();
-    mat4_t projection = m4_ortho(0.f, (float) width, (float) height, 0.f, 0.f, 1.f);
+    mat4_t projection = m4_ortho(0.f, (float) state->width, (float) state->height, 0.f, 0.f, 1.f);
 
     // borticle shaders
     ShaderState bort = {0};
-    bort.vp_width = width;
-    bort.vp_height = height;
+    bort.vp_width = state->width; // TODO  replace w state
+    bort.vp_height = state->height;
 
     bort_init_shaders(&bort);
     bort_init_matrices(&bort, model.m, view.m, projection.m);
-    bort_init_shaders_data(&bort, pop_len);
+    bort_init_shaders_data(&bort, state->pop_len);
 
-    // borticle data
-    vec4 positions[POP_MAX];
-    rgba colors[POP_MAX];
-    Borticle pop[POP_MAX];
+    float hw = (float) state->width / 2;
+    float hh = (float) state->height / 2;
 
-    float hw = (float) width / 2;
-    float hh = (float) height / 2;
-
-    for (size_t i = 0; i < pop_len; i++) {
-        pop[i].id = i;
-        pop[i].pos = (vec3_t) {hw, hh, 0.f};
-        pop[i].color = (rgba) {
+    for (size_t i = 0; i < state->pop_len; i++) {
+        state->population[i].id = i;
+        state->population[i].pos = (vec3_t) {hw, hh, 0.f};
+        state->population[i].color = (rgba) {
             rand_range_f(0.f, 1.f),
             rand_range_f(0.f, 1.f),
             rand_range_f(0.f, 1.f),
             1.f
         };
-        pop[i].vel = (vec3_t) {
+        state->population[i].vel = (vec3_t) {
             rand_range_f(-10.f, 10.f),
             rand_range_f(-10.f, 10.f),
             0.f
         };
-        pop[i].acc = (vec3_t) {
+        state->population[i].acc = (vec3_t) {
             rand_range_f(0.1f, 5.f),
             rand_range_f(0.1f, 5.f),
             0.f
         };
-        pop[i].size = rand_range_f(0.1f, 6.f);
+        state->population[i].size = rand_range_f(0.1f, 6.f);
     }
 
     // qtree shaders
     ShaderState qt = {0};
-    qt.vp_width = width;
-    qt.vp_height = height;
+    qt.vp_width = state->width; // TODO  replace w state
+    qt.vp_height = state->height;
 
     qtree_init_shaders(&qt);
     bort_init_matrices(&qt, model.m, view.m, projection.m);// TODO make common funcname name
 
     // fps calc
     double now, delta;
-    double max = 1.0 / fps;
+    double max = 1.0 / state->fps;
     then = glfwGetTime();
 
     while (!glfwWindowShouldClose(window)) {
@@ -223,7 +218,7 @@ int main(int argc, char **argv) {
             continue;
         }
 
-        if (paused) {
+        if (state->paused) {
             glfwPollEvents();
             continue;
         }
@@ -232,13 +227,14 @@ int main(int argc, char **argv) {
         glClear(GL_COLOR_BUFFER_BIT);
 
         // update
-        bort.vp_width = width;
-        bort.vp_height = height;
-        QNode *tree = qnode_create((rect){0.f, 0.f, (float)width, (float)height});
-        bort_update(&bort, tree, pop, positions, colors, pop_len);
+        bort.vp_width = state->width; // TODO  replace w state
+        bort.vp_height = state->height;
+        QNode *tree = qnode_create((rect){0.f, 0.f, (float)state->width, (float)state->height});
+        bort_update(&bort, tree, state->population, state->positions, state->colors, state->pop_len);
+        // state_print(stdout, state);
 
         // draw
-        bort_draw_2D(&bort, tree, pop, positions, colors, pop_len);
+        bort_draw_2D(&bort, tree, state->population, state->positions, state->colors, state->pop_len);
         qtree_draw_2D(tree, &qt);
 
         // finalize
@@ -250,8 +246,11 @@ int main(int argc, char **argv) {
     }
 
     // cleanup
+
     bort_cleanup_shaders(&bort);
     qtree_cleanup_shaders(&qt);
+    state_destroy(state);
+
     glfwTerminate();
 
     return 0;
