@@ -86,6 +86,7 @@ void state_print(FILE *fp, State *state) {
         "  height: %d\n"
         "  fps: %d\n"
         "  paused: %d\n"
+        "  algorithms: %d\n"
         "  pop_max: %d\n"
         "  pop_len: %d\n"
         "  population: %s\n"
@@ -97,6 +98,7 @@ void state_print(FILE *fp, State *state) {
         state->height,
         state->fps,
         state->paused,
+        state->algorithms,
         state->pop_max,
         state->pop_len,
         (state->population) ? "[...]" : "<NULL>",

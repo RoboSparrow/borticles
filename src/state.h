@@ -13,12 +13,20 @@
 
 #define POP_MAX 1000
 
+typedef enum {
+    ALGO_NONE = 1 << 0, // 1
+} Algotithm;
+
 typedef struct State {
     int width, height;
 
     unsigned int fps;
     unsigned int paused;
 
+    // algorithms
+    unsigned int algorithms;
+
+    // population
     unsigned int pop_max;
     unsigned int pop_len;
 

@@ -17,19 +17,16 @@ typedef struct {
     rgba  color; // TODO replace with pointer to flat array
 } Borticle;
 
-// init
+// shaders
 void bort_init_shaders(Shader *shader);
 void bort_init_matrices(Shader *shader, float model[4][4], float view[4][4], float projection[4][4]);
 void bort_init_shaders_data(Shader *shader, State *state);
-
-// update
-void bort_update(Shader *shader, State *state);
-
-// draw
-void bort_draw_2D(Shader *shader, State *state);
-
-// exit
 void bort_cleanup_shaders(Shader *shader);
+
+// boticle population
+void bort_init(Shader *shader, State *state);
+void bort_update(Shader *shader, State *state);
+void bort_draw_2D(Shader *shader, State *state);
 
 //
 void qtree_init_shaders(Shader *shader);

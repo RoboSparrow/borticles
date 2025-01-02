@@ -107,6 +107,7 @@ static void _configure(State *state, int argc, char **argv) {
             break;
 
         case 'h':
+
         case '?':
             fprintf(stderr, usage, argv[0]);
             exit(0);
@@ -115,6 +116,7 @@ static void _configure(State *state, int argc, char **argv) {
     }
 
     state_set_len(state, pop_len);
+    BIT_SET(state->algorithms, ALGO_NONE);
 }
 
 int main(int argc, char **argv) {
@@ -170,35 +172,13 @@ int main(int argc, char **argv) {
     bort_init_matrices(&bort, model.m, view.m, projection.m);
     bort_init_shaders_data(&bort, state);
 
-    float hw = (float) state->width / 2;
-    float hh = (float) state->height / 2;
-
-    for (size_t i = 0; i < state->pop_len; i++) {
-        state->population[i].id = i;
-        state->population[i].pos = (vec3_t) {hw, hh, 0.f};
-        state->population[i].color = (rgba) {
-            rand_range_f(0.f, 1.f),
-            rand_range_f(0.f, 1.f),
-            rand_range_f(0.f, 1.f),
-            1.f
-        };
-        state->population[i].vel = (vec3_t) {
-            rand_range_f(-10.f, 10.f),
-            rand_range_f(-10.f, 10.f),
-            0.f
-        };
-        state->population[i].acc = (vec3_t) {
-            rand_range_f(0.1f, 5.f),
-            rand_range_f(0.1f, 5.f),
-            0.f
-        };
-        state->population[i].size = rand_range_f(0.1f, 6.f);
-    }
-
     // qtree shaders
     Shader qt = {0};
     qtree_init_shaders(&qt);
     bort_init_matrices(&qt, model.m, view.m, projection.m);// TODO make common funcname name
+
+    // init population
+    bort_init(&bort, state);
 
     // fps calc
     double now, delta;
