@@ -113,11 +113,24 @@ static void test_contains(QNode *root) {
     });
     assert(res == src);
 
+    // find the smallest containing node (using root)
+    res = qnode_contains(root, (rect) {0.f, 0.f, 1.f, 1.f});
+    assert(res == root->nw);
+
+    res = qnode_contains(root, (rect) {
+        src->area.x      + 1.f,
+        src->area.y      + 1.f,
+        src->area.width  - 1.f,
+        src->area.height - 1.f
+    });
+    assert(res == root->se);
+
     DONE();
 }
 
 static void test_duplicate_pos() {
     DESCRIBE("node capacity");
+
     QNode *root;
     QNode *curr;
     unsigned int i;
