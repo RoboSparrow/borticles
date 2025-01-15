@@ -26,20 +26,30 @@
 
 #define QNODE_CAPACITY 4
 
+typedef enum{
+    QDIR_NW,
+    QDIR_NE,
+    QDIR_SE,
+    QDIR_SW
+} QDir;
+
 typedef struct {
     vec2 pos;
     // id
     int id;
     // void *data;
-}  QMember ;
+} QMember;
 
 typedef struct QNode {
     rect area; //aabb
+
+    struct QNode *parent;
 
     struct QNode *nw;
     struct QNode *ne;
     struct QNode *se;
     struct QNode *sw;
+
     unsigned int depth;
 
     // boxes and data strictly need to be kept in sync
@@ -48,8 +58,9 @@ typedef struct QNode {
 } QNode;
 
 QNode *qnode_create(rect area);
-unsigned int qnode_insert(QNode *node, vec2 pos, int id);
+QNode *qnode_insert(QNode *node, vec2 pos, int id);
 QNode *qnode_get(QNode *node, vec2 pos);
+QNode *qnode_contains(QNode *root, rect area);
 void qnode_walk(QNode *root, void (*descent)(QNode *node), void (*ascent)(QNode *node));
 void qnode_destroy(QNode *node);
 

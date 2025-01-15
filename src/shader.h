@@ -1,6 +1,8 @@
 #ifndef __SHADER_H__
 #define __SHADER_H__
 
+#include <glad/glad.h>
+
 typedef struct Shader {
     GLuint program;
     GLuint vao[5];

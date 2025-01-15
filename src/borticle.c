@@ -72,34 +72,6 @@ void bort_init_shaders_data(Shader *shader, State *state) {
     glUseProgram(0);
 }
 
-static void _update_size(Shader *shader, State *state, Borticle *bort, size_t index) {}
-
-static void _update_position(Shader *shader, State *state, Borticle *bort, size_t index) {
-    float dirx = (bort->vel.x > 0) ? 1 : -1;
-    float diry = (bort->vel.y > 0) ? 1 : -1;
-
-    bort->vel.x = (dirx * bort->acc.x);
-    bort->vel.y = (diry * bort->acc.y);
-
-    bort->pos.x += bort->vel.x;
-    bort->pos.y += bort->vel.y;
-    if (
-           bort->pos.x < 0
-        || bort->pos.x > state->width
-        || bort->pos.y < 0
-        || bort->pos.y > state->height
-    ) {
-        // reset
-        bort->pos.x = state->width / 2.f;
-        bort->pos.y = state->height / 2.f;
-        bort->vel.x = rand_range_f(-10.f, 10.f);
-        bort->vel.y = rand_range_f(-10.f, 10.f);
-    }
-    //printf("%d {%f,%f}\n", bort->id, bort->pos.x, bort->pos.y);
-}
-
-static void _update_color(Shader *shader, State *state, Borticle *bort, size_t index) {}
-
 /**
  * Initializes a poplation of borticles
  */
@@ -114,26 +86,11 @@ void bort_init(Shader *shader, State *state) {
 
         bort->id = i;
         bort->pos = (vec3_t) {hw, hh, 0.f};
+        bort->color = (rgba) {1.f, 1.f, 1.f, 1.f};
+        bort->quadrant = NULL;
 
-        if (BIT_CHECK(state->algorithms, ALGO_NONE)) {
-            bort->color = (rgba) {
-                rand_range_f(0.f, 1.f),
-                rand_range_f(0.f, 1.f),
-                rand_range_f(0.f, 1.f),
-                1.f
-            };
-            bort->vel = (vec3_t) {
-                rand_range_f(-10.f, 10.f),
-                rand_range_f(-10.f, 10.f),
-                0.f
-            };
-            bort->acc = (vec3_t) {
-                rand_range_f(0.1f, 5.f),
-                rand_range_f(0.1f, 5.f),
-                0.f
-            };
-            bort->size = rand_range_f(0.1f, 6.f);
-        }
+        bort_init_default(shader, state, bort, i);
+        // bort_print(stdout, bort);
     }
 
 }
@@ -148,10 +105,7 @@ void bort_update(Shader *shader, State *state) {
         bort = &state->population[i];
 
         if (BIT_CHECK(state->algorithms, ALGO_NONE)) {
-            // update bort TODO accl, vel
-            _update_size(shader, state, bort, i);
-            _update_position(shader, state, bort, i);
-            _update_color(shader, state, bort, i);
+            bort_update_default(shader, state, bort, i);
         }
 
         // update vertex data for vbos
@@ -164,7 +118,7 @@ void bort_update(Shader *shader, State *state) {
         state->colors[i] = bort->color;
 
         // insert boricle into qtree
-        qnode_insert(
+        bort->quadrant = qnode_insert(
             state->tree,
             (vec2) {
                 bort->pos.x,
@@ -172,6 +126,7 @@ void bort_update(Shader *shader, State *state) {
             },
             state->population[i].id
         );
+        // bort_print(stdout, bort);
     }
 }
 
@@ -224,6 +179,49 @@ void bort_cleanup_shaders(Shader *shader) {
     glDeleteBuffers(BUF_NUM, shader->vbo);
 }
 
+void bort_print(FILE *fp, Borticle *bort) {
+    if (!fp) {
+        return;
+    }
+    if (!bort) {
+        fprintf(fp, "<NULL>\n");
+        return;
+    }
+
+    fprintf(fp,
+        "{\n"
+        "  id: %d\n"
+        "  pos: {%.2f, %.2f, %.2f}\n"
+        "  vel: {%.2f, %.2f, %.2f}\n"
+        "  acc: {%.2f, %.2f, %.2f}\n"
+        "  size: %.2f\n"
+        "  color: {%.2f, %.2f, %.2f, %.2f}\n"
+        ,
+
+        bort->id,
+        bort->pos.x, bort->pos.y, bort->pos.z,
+        bort->vel.x, bort->vel.y, bort->vel.z,
+        bort->acc.x, bort->acc.y, bort->acc.z,
+        bort->size,
+        bort->color.r, bort->color.g, bort->color.b, bort->color.a
+    );
+
+    if (bort->quadrant) {
+        fprintf(fp,
+            "  quadrant: {depth:%d, sz:%ld, area:{x:%.2f, y:%.2f, w:%.2f, h:%.2f}}\n",
+            bort->quadrant->depth,
+            bort->quadrant->sz,
+            bort->quadrant->area.x, bort->quadrant->area.y, bort->quadrant->area.width, bort->quadrant->area.height
+        );
+    } else {
+        fprintf(fp,
+            "  quadrant: <NULL>\n"
+        );
+    }
+
+    fprintf(fp, "}\n");
+}
+
 
 ////
 // rendering qtree
@@ -236,7 +234,7 @@ struct QuadArray {
     size_t v_count;
 };
 
-static  void _make_quad_array(QNode *root, struct QuadArray *qa) {
+static void _make_quad_array(QNode *root, struct QuadArray *qa) {
     if (qa->v_count >= QTREE_RENDER_MAX - 1) {
         LOG_INFO_F("reached quad_array limits: %d\n", QTREE_RENDER_MAX);
         return;

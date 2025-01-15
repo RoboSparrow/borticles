@@ -26,20 +26,27 @@ unsigned int _check_pos_inside(vec2 pos, rect outer) {
         && outer.y + outer.height >= pos.y;
 }
 
+unsigned int _check_rect_inside(rect inner, rect outer) {
+    return inner.x >= outer.x
+        && inner.y >= outer.y
+        && (inner.x + inner.width)  <= (outer.x + outer.width)
+        && (inner.y + inner.height) <= (outer.y + outer.height);
+}
+
 static QNode *_get_quadrant(vec2 pos, QNode *node) {
     if (!node || !node->nw) {
         return NULL;
     }
-    if(_check_pos_inside(pos, node->nw->area)) {
+    if (_check_pos_inside(pos, node->nw->area)) {
         return node->nw;
     }
-    if(_check_pos_inside(pos, node->ne->area)) {
+    if (_check_pos_inside(pos, node->ne->area)) {
         return node->ne;
     }
-    if(_check_pos_inside(pos, node->se->area)) {
+    if (_check_pos_inside(pos, node->se->area)) {
         return node->se;
     }
-    if(_check_pos_inside(pos, node->sw->area)) {
+    if (_check_pos_inside(pos, node->sw->area)) {
         return node->sw;
     }
     return NULL;
@@ -58,37 +65,58 @@ static void _split(QNode *node) {
     unsigned int depth = node->depth + 1;
 
     node->nw = qnode_create((rect){x,     y,     w, h});
+    node->nw->parent = node;
     node->nw->depth = depth;
+
     node->ne = qnode_create((rect){x + w, y,     w, h});
+    node->ne->parent = node;
     node->ne->depth = depth;
+
     node->se = qnode_create((rect){x + w, y + h, w, h});
+    node->se->parent = node;
     node->se->depth = depth;
+
     node->sw = qnode_create((rect){x,     y + h, w, h});
+    node->sw->parent = node;
     node->sw->depth = depth;
 
     size_t i;
-    int res;
-    QNode *child;
+    QNode *child, *res;
     for (i = 0; i < node->sz; i++) {
         child = _get_quadrant(node->members[i].pos, node);
-        if(child) {
+        if (child) {
             res = qnode_insert(child, node->members[i].pos, node->members[i].id);
-            if (res == 0) {
+            if (res == NULL) {
                 LOG_ERROR_F("error inserting node member %d", node->members[i].id);
             }
         }
     }
+
     node->sz = 0;
     freez(node->members);
     node->members = NULL;
 }
 
-static  int _count_quads(QNode *root) {
+static void _count_quads(QNode *root) {
     count ++;
-    if(root->nw != NULL) _count_quads(root->nw);
-    if(root->ne != NULL) _count_quads(root->ne);
-    if(root->sw != NULL) _count_quads(root->sw);
-    if(root->se != NULL) _count_quads(root->se);
+    if (root->nw != NULL) _count_quads(root->nw);
+    if (root->ne != NULL) _count_quads(root->ne);
+    if (root->sw != NULL) _count_quads(root->sw);
+    if (root->se != NULL) _count_quads(root->se);
+}
+
+/**
+ * get the region of a child node
+ */
+static int _get_region(QNode *root) {
+    if (!root->parent) return -1;
+
+    if (root->parent->nw == root) return QDIR_NW;
+    if (root->parent->ne == root) return QDIR_NE;
+    if (root->parent->se == root) return QDIR_SE;
+    if (root->parent->sw == root) return QDIR_SW;
+
+    return -1;
 }
 
 QNode *qnode_create(rect area) {
@@ -113,15 +141,15 @@ void qnode_destroy(QNode *node) {
     free(node);
 }
 
-unsigned int qnode_insert(QNode *node, vec2 pos, int id) {
+QNode *qnode_insert(QNode *node, vec2 pos, int id) {
     // printf("---- insert id %d (%f,%f) into depth %d in area {%f,%f,%f,%f} (sz: %ld)\n", id, pos.x, pos.y, node->depth, node->area.x, node->area.y, node->area.x + node->area.width, node->area.y + node->area.height, node->sz);
 
-    if(!_check_pos_inside(pos, node->area)) {
-        return 0;
+    if (!_check_pos_inside(pos, node->area)) {
+        return NULL;
     }
 
     if (_has_duplicate_pos(node, pos)) {
-        return 0;
+        return NULL;
     }
 
     QNode *child;
@@ -132,7 +160,7 @@ unsigned int qnode_insert(QNode *node, vec2 pos, int id) {
         if (child) {
             return qnode_insert(child, pos, id);
         }
-        return 0;
+        return NULL;
     }
 
     // leaf node
@@ -143,11 +171,12 @@ unsigned int qnode_insert(QNode *node, vec2 pos, int id) {
     }
 
     //  has a free slot
+
     if (node->sz < QNODE_CAPACITY) {
         node->members[node->sz].pos = pos;
         node->members[node->sz].id = id;
         node->sz++;
-        return 1;
+        return node;
     }
 
     // othwerwise split (this node wont be a leaf from now)
@@ -174,13 +203,53 @@ QNode *qnode_get(QNode *node, vec2 pos) {
     return qnode_get(child, pos);
 }
 
+/**
+ * Finds the lowest (smallest) quad encompassing a given area
+ */
+QNode *qnode_contains(QNode *root, rect area) {
+    // leaf node
+    if (!root->nw) {
+        if (_check_rect_inside(area, root->area)) {
+            return root;
+        }
+        return NULL;
+    }
+
+    // if one of the children encloses the area then pass search on
+    if (_check_rect_inside(area, root->nw->area)) {
+        return qnode_contains(root->nw, area);
+    }
+    if (_check_rect_inside(area, root->ne->area)) {
+        return qnode_contains(root->ne, area);
+    }
+    if (_check_rect_inside(area, root->se->area)) {
+        return qnode_contains(root->se, area);
+    }
+    if (_check_rect_inside(area, root->sw->area)) {
+        return qnode_contains(root->sw, area);
+    }
+
+    return root;
+}
+
 void qnode_walk(QNode *root, void (*descent)(QNode *node), void (*ascent)(QNode *node)) {
     (*descent)(root);
-    if(root->nw != NULL) qnode_walk(root->nw, descent, ascent);
-    if(root->ne != NULL) qnode_walk(root->ne, descent, ascent);
-    if(root->sw != NULL) qnode_walk(root->sw, descent, ascent);
-    if(root->se != NULL) qnode_walk(root->se, descent, ascent);
-    (*ascent)(root);
+
+    if (root->nw != NULL) {
+        qnode_walk(root->nw, descent, ascent);
+    }
+    if (root->ne != NULL) {
+        qnode_walk(root->ne, descent, ascent);
+    }
+    if (root->sw != NULL) {
+        qnode_walk(root->sw, descent, ascent);
+    }
+    if (root->se != NULL) {
+        qnode_walk(root->se, descent, ascent);
+    }
+    if (ascent) {
+        (*ascent)(root);
+    }
 }
 
 size_t qnode_count(QNode *root) {
@@ -192,11 +261,11 @@ size_t qnode_count(QNode *root) {
 }
 
 void qnode_print(FILE *fp, QNode *node) {
-    if(!fp) {
+    if (!fp) {
         return;
     }
 
-    if(!node) {
+    if (!node) {
         fprintf(fp, "NULL\n");
         return;
     }
@@ -204,9 +273,11 @@ void qnode_print(FILE *fp, QNode *node) {
     fprintf(fp,
         "{"
         " area: {x:%f, y:%f, w:%f, h:%f},"
+        " parent: %s,"
         " nw:%c, ne:%c, se:%c, sw:%c,"
         " depth: %d, sz: %ld,",
         node->area.x, node->area.y, node->area.width, node->area.height,
+        (node->parent) ? "y" : "<NULL>",
         (node->nw) ? 'y' : '-', (node->ne) ? 'y' : '-', (node->se) ? 'y' : '-', (node->sw) ? 'y' : '-',
         node->depth, node->sz
     );
