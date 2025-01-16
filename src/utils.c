@@ -28,13 +28,13 @@ char *load_file_alloc(const char *path) {
     long sz = ftell(fp);
     fseek(fp, 0L, SEEK_SET);    // rewind
 
-    char *buffer = calloc(sz, sizeof(char));
+    char *buffer = malloc((sz + 1) * sizeof(char));
     if (!buffer) {
         LOG_ERROR_F("failed to allocate memory for file '%s'", path);
         return NULL;
     }
 
-    size_t len = fread(buffer, sizeof(char), len, fp);
+    size_t len = fread(buffer, sizeof(char), sz, fp);
     if (ferror(fp) != 0 ) {
         LOG_ERROR_F("error reading file '%s': '%s'", path, strerror(errno));
         freez(buffer);
