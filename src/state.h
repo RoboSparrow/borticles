@@ -14,7 +14,8 @@
 #define POP_MAX 1000
 
 typedef enum {
-    ALGO_NONE = 1 << 0, // 1
+    ALGO_NONE       = 1 << 0, // 1
+    ALGO_ATTRACTION = 1 << 2, // 2
 } Algotithm;
 
 typedef struct State {
@@ -25,6 +26,9 @@ typedef struct State {
 
     // algorithms
     unsigned int algorithms;
+
+    // Gravitational constant G
+    float grav_g;
 
     // population
     unsigned int pop_max;
@@ -42,7 +46,9 @@ typedef struct State {
 State *state_create();
 void state_set_len(State *state, unsigned int len);
 void state_destroy(State *state);
-
 void state_print(FILE *fp, State *state);
+
+Borticle *state_get_borticle(State *state, int index);
+
 
 #endif

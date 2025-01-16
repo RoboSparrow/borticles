@@ -125,6 +125,8 @@ QNode *qnode_create(rect area) {
 
     node->area = area;
     node->sz = 0;
+    node->parent = NULL;
+    node->members = NULL;
 
     return node;
 }
@@ -137,8 +139,9 @@ void qnode_destroy(QNode *node) {
     qnode_destroy(node->ne);
     qnode_destroy(node->se);
     qnode_destroy(node->sw);
+
     freez(node->members);
-    free(node);
+    freez(node);
 }
 
 QNode *qnode_insert(QNode *node, vec2 pos, int id) {
@@ -166,7 +169,7 @@ QNode *qnode_insert(QNode *node, vec2 pos, int id) {
     // leaf node
 
     if (!node->members) {
-        node->members = malloc(QNODE_CAPACITY * sizeof(QNode));
+        node->members = malloc(QNODE_CAPACITY * sizeof(QMember));
         EXIT_IF(node->members == NULL, "failed to allocate for QNode members");
     }
 

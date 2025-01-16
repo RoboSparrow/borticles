@@ -2,7 +2,6 @@
 #include <math.h>
 
 #include <glad/glad.h>
-#include "external/math_3d.h"
 
 #include "utils.h"
 #include "log.h"
@@ -89,8 +88,14 @@ void bort_init(Shader *shader, State *state) {
         bort->color = (rgba) {1.f, 1.f, 1.f, 1.f};
         bort->quadrant = NULL;
 
-        bort_init_default(shader, state, bort, i);
-        // bort_print(stdout, bort);
+        if (state->algorithms == ALGO_NONE) {
+            bort_init_default(shader, state, bort, i);
+        }
+
+        if ((state->algorithms & ALGO_ATTRACTION) > 0) {
+            bort_init_attraction(shader, state, bort, i);
+        }
+
     }
 
 }
@@ -104,8 +109,12 @@ void bort_update(Shader *shader, State *state) {
     for (size_t i = 0; i < state->pop_len; i++) {
         bort = &state->population[i];
 
-        if (BIT_CHECK(state->algorithms, ALGO_NONE)) {
+        if (state->algorithms == ALGO_NONE) {
             bort_update_default(shader, state, bort, i);
+        }
+
+        if ((state->algorithms & ALGO_ATTRACTION) > 0) {
+            bort_update_attraction(shader, state, bort, i);
         }
 
         // update vertex data for vbos

@@ -41,4 +41,7 @@ void qtree_cleanup_shaders(Shader *shader);
 void bort_init_default(Shader *shader, State *state, Borticle *bort, size_t index);
 void bort_update_default(Shader *shader, State *state, Borticle *bort, size_t index);
 
+void bort_init_attraction(Shader *shader, State *state, Borticle *bort, size_t index);
+void bort_update_attraction(Shader *shader, State *state, Borticle *bort, size_t index);
+
 #endif

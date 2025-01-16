@@ -48,7 +48,6 @@ static void _error_callback(int err, const char* message) {
     LOG_ERROR_F("GLFW Error (%d): %s", err, message);
 }
 
-
 /**
  * key input callback
  * @see https://www.glfw.org/docs/latest/input_guide.html#input_key
@@ -75,12 +74,12 @@ static void _gl_key_callback(GLFWwindow *window, int key, int scancode, int acti
 
 static void _configure(State *state, int argc, char **argv) {
 
-    int opt;
-    int ival;
+    int opt, ival;
+    float fval;
     unsigned int pop_len = POP_MAX;
 
-    char usage[] = "usage: %s [-h] [-p particles:number] [-f fps] [-P paused]\n";
-    while ((opt = getopt(argc, argv, "f:p:Ph")) != -1) {
+    char usage[] = "usage: %s [-h] [-p particles:number] [-f fps] [-g fgravity constant] [-P paused]\n";
+    while ((opt = getopt(argc, argv, "f:g:p:Ph")) != -1) {
         switch (opt) {
         case 'p':
             ival = atoi(optarg);
@@ -102,6 +101,16 @@ static void _configure(State *state, int argc, char **argv) {
             state->fps = ival;
             break;
 
+        case 'g':
+            fval = atof(optarg);
+            if (!fval || fval < 0.f) {
+                fprintf(stderr, "invalid 'g' option value\n");
+                exit(1);
+            }
+
+            state->grav_g = fval;
+            break;
+
         case 'P':
             state->paused = 1;
             break;
@@ -116,7 +125,12 @@ static void _configure(State *state, int argc, char **argv) {
     }
 
     state_set_len(state, pop_len);
-    BIT_SET(state->algorithms, ALGO_NONE);
+    state->algorithms = ALGO_NONE;
+
+    // dev algorithm
+    state->algorithms |= ALGO_ATTRACTION;
+
+    // state_print(stdout, state);
 }
 
 int main(int argc, char **argv) {
@@ -185,6 +199,8 @@ int main(int argc, char **argv) {
     double max = 1.0 / state->fps;
     then = glfwGetTime();
 
+    state_print(stdout, state);
+
     while (!glfwWindowShouldClose(window)) {
         // init
         now = glfwGetTime();
@@ -221,8 +237,8 @@ int main(int argc, char **argv) {
 
     bort_cleanup_shaders(&bort);
     qtree_cleanup_shaders(&qt);
-    state_destroy(state);
 
+    state_destroy(state);
     glfwTerminate();
 
     return 0;

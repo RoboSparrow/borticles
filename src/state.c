@@ -18,8 +18,16 @@ State *state_create() {
     state->fps = 32;
     state->paused = 0;
 
+    state->grav_g = 9.81f;
+
     state->pop_max = POP_MAX;
     state->pop_len = 0;
+
+    state->population = NULL;
+    state->tree = NULL;
+    state->positions = NULL;
+    state->colors = NULL;
+
     return state;
 }
 
@@ -87,6 +95,7 @@ void state_print(FILE *fp, State *state) {
         "  fps: %d\n"
         "  paused: %d\n"
         "  algorithms: %d\n"
+        "  grav_g: %.2f\n"
         "  pop_max: %d\n"
         "  pop_len: %d\n"
         "  population: %s\n"
@@ -99,10 +108,23 @@ void state_print(FILE *fp, State *state) {
         state->fps,
         state->paused,
         state->algorithms,
+        state->grav_g,
         state->pop_max,
         state->pop_len,
         (state->population) ? "[...]" : "<NULL>",
         (state->positions) ? "[...]" : "<NULL>",
         (state->colors) ? "[...]" : "<NULL>"
     );
+}
+
+Borticle *state_get_borticle(State *state, int index) {
+    if (!state || !state->population) {
+        return NULL;
+    }
+
+    if (index >= 0 && index < state->pop_len) {
+        return &state->population[index];
+    }
+
+    return NULL;
 }
