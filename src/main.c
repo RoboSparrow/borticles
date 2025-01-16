@@ -228,6 +228,7 @@ int main(int argc, char **argv) {
         // finalize
         then = now;
         qnode_destroy(state->tree);
+        state->tree = NULL;
 
         glfwSwapBuffers(window);
         glfwPollEvents();
