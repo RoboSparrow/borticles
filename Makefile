@@ -3,8 +3,8 @@ CC=gcc
 BIN=bin/borticles
 
 CFLAGS=-Wall -Wextra -Werror -Wpedantic -pedantic-errors
-LOPT=-lm -lGL
-LOPT+= -lglfw -lm -I.
+LOPT=-lGL -lglfw -lm
+LOPT+=-I.
 
 HEADERS=$(wildcard src/*.h)
 SOURCES=$(filter-out src/main.c, $(wildcard src/*.c))
