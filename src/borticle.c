@@ -17,13 +17,13 @@ typedef enum {
     BUF_NUM,
 } BufferObjects;
 
-void bort_init_shaders(Shader *shader) {
+void bort_init_shaders(ShaderInfo *shader) {
     GLuint vert_sh = shader_load("shaders/borticle.vert", GL_VERTEX_SHADER);
     GLuint frag_sh = shader_load("shaders/borticle.frag", GL_FRAGMENT_SHADER);
     shader->program = shader_program(vert_sh, frag_sh, 0);
 }
 
-void bort_init_matrices(Shader *shader, float model[4][4], float view[4][4], float projection[4][4]) {
+void bort_init_matrices(ShaderInfo *shader, float model[4][4], float view[4][4], float projection[4][4]) {
     glUseProgram(shader->program);
     shader->loc_model      = shader_set_uniform_mat4(shader->program, "model", model);
     shader->loc_view       = shader_set_uniform_mat4(shader->program, "view", view);
@@ -31,7 +31,7 @@ void bort_init_matrices(Shader *shader, float model[4][4], float view[4][4], flo
     glUseProgram(0);
 }
 
-void bort_init_shaders_data(Shader *shader, State *state) {
+void bort_init_shaders_data(ShaderInfo *shader, State *state) {
     float cx  = (float) state->width / 2;
     float cy  = (float) state->height / 2;
     float sz = 5.f;
@@ -74,7 +74,7 @@ void bort_init_shaders_data(Shader *shader, State *state) {
 /**
  * Initializes a poplation of borticles
  */
-void bort_init(Shader *shader, State *state) {
+void bort_init(ShaderInfo *shader, State *state) {
     Borticle *bort;
 
     float hw = (float) state->width / 2;
@@ -103,7 +103,7 @@ void bort_init(Shader *shader, State *state) {
 /**
  * Updates a poplation of borticles
  */
-void bort_update(Shader *shader, State *state) {
+void bort_update(ShaderInfo *shader, State *state) {
     Borticle *bort;
 
     for (size_t i = 0; i < state->pop_len; i++) {
@@ -142,7 +142,7 @@ void bort_update(Shader *shader, State *state) {
 /**
  * prepares drawing to window
  */
-void bort_draw_2D(Shader *shader, State *state) {
+void bort_draw_2D(ShaderInfo *shader, State *state) {
     if (!shader) {
         return;
     }
@@ -180,7 +180,7 @@ void bort_draw_2D(Shader *shader, State *state) {
     glUseProgram(0);
 }
 
-void bort_cleanup_shaders(Shader *shader) {
+void bort_cleanup_shaders(ShaderInfo *shader) {
     if (!shader) {
         return;
     }
@@ -321,7 +321,7 @@ void _print_quad_array(FILE *fp, struct QuadArray *quads) {
     fprintf(fp, "\n]\n");
 }
 
-void qtree_init_shaders(Shader *shader) {
+void qtree_init_shaders(ShaderInfo *shader) {
     GLuint vsh = shader_load("shaders/qtree.vert", GL_VERTEX_SHADER);
     GLuint fsh = shader_load("shaders/qtree.frag", GL_FRAGMENT_SHADER);
     GLuint gsh = 0;
@@ -348,7 +348,7 @@ void qtree_init_shaders(Shader *shader) {
 /**
  * prepares drawing to window
  */
-void qtree_draw_2D(Shader *shader, State *state) {
+void qtree_draw_2D(ShaderInfo *shader, State *state) {
     // update
     struct QuadArray quads = {0};
     if (state->tree) {
@@ -375,7 +375,7 @@ void qtree_draw_2D(Shader *shader, State *state) {
     glBindVertexArray(0);
 }
 
-void qtree_cleanup_shaders(Shader *shader) {
+void qtree_cleanup_shaders(ShaderInfo *shader) {
     if (!shader) {
         return;
     }

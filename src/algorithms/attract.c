@@ -7,9 +7,9 @@
 #include "borticle.h"
 #include "state.h"
 
-static void _update_size(Shader *shader, State *state, Borticle *bort, size_t index) {}
+static void _update_size(ShaderInfo *shader, State *state, Borticle *bort, size_t index) {}
 
-static void _update_position(Shader *shader, State *state, Borticle *bort, size_t index) {
+static void _update_position(ShaderInfo *shader, State *state, Borticle *bort, size_t index) {
     float dirx = (bort->vel.x > 0) ? 1 : -1;
     float diry = (bort->vel.y > 0) ? 1 : -1;
 
@@ -27,7 +27,7 @@ static void _update_position(Shader *shader, State *state, Borticle *bort, size_
     bort->pos.y += bort->vel.y;
 }
 
-static void _update_color(Shader *shader, State *state, Borticle *bort, size_t index) {}
+static void _update_color(ShaderInfo *shader, State *state, Borticle *bort, size_t index) {}
 
 float _magnitude(Borticle *src, Borticle *targ) {
     if (!src || !targ) {
@@ -84,7 +84,7 @@ static void _apply_attraction(Borticle *bort, QNode *region, float max_dist, Sta
     if(region->se != NULL) _apply_attraction(bort, region->se, max_dist, state);
 }
 
-void bort_init_attraction(Shader *shader, State *state, Borticle *bort, size_t index) {
+void bort_init_attraction(ShaderInfo *shader, State *state, Borticle *bort, size_t index) {
     // shader and state are required and wont be tested here
     if (!bort) {
         return;
@@ -118,7 +118,7 @@ void bort_init_attraction(Shader *shader, State *state, Borticle *bort, size_t i
     bort->size = rand_range_f(0.1f, 6.f);
 }
 
-void bort_update_attraction(Shader *shader, State *state, Borticle *bort, size_t index) {
+void bort_update_attraction(ShaderInfo *shader, State *state, Borticle *bort, size_t index) {
     if(!bort) {
         return;
     }

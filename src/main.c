@@ -181,13 +181,13 @@ int main(int argc, char **argv) {
     mat4_t projection = m4_ortho(0.f, (float) state->width, (float) state->height, 0.f, 0.f, 1.f);
 
     // borticle shaders
-    Shader bort = {0};
+    ShaderInfo bort = {0};
     bort_init_shaders(&bort);
     bort_init_matrices(&bort, model.m, view.m, projection.m);
     bort_init_shaders_data(&bort, state);
 
     // qtree shaders
-    Shader qt = {0};
+    ShaderInfo qt = {0};
     qtree_init_shaders(&qt);
     bort_init_matrices(&qt, model.m, view.m, projection.m);// TODO make common funcname name
 

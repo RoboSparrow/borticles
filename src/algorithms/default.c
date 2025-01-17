@@ -2,9 +2,9 @@
 #include "borticle.h"
 #include "state.h"
 
-static void _update_size(Shader *shader, State *state, Borticle *bort, size_t index) {}
+static void _update_size(ShaderInfo *shader, State *state, Borticle *bort, size_t index) {}
 
-static void _update_position(Shader *shader, State *state, Borticle *bort, size_t index) {
+static void _update_position(ShaderInfo *shader, State *state, Borticle *bort, size_t index) {
     float dirx = (bort->vel.x > 0) ? 1 : -1;
     float diry = (bort->vel.y > 0) ? 1 : -1;
 
@@ -28,9 +28,9 @@ static void _update_position(Shader *shader, State *state, Borticle *bort, size_
     //printf("%d {%f,%f}\n", bort->id, bort->pos.x, bort->pos.y);
 }
 
-static void _update_color(Shader *shader, State *state, Borticle *bort, size_t index) {}
+static void _update_color(ShaderInfo *shader, State *state, Borticle *bort, size_t index) {}
 
-void bort_init_default(Shader *shader, State *state, Borticle *bort, size_t index) {
+void bort_init_default(ShaderInfo *shader, State *state, Borticle *bort, size_t index) {
     // shader and state are required and wont be tested here
     if(!bort) {
         return;
@@ -55,7 +55,7 @@ void bort_init_default(Shader *shader, State *state, Borticle *bort, size_t inde
     bort->size = rand_range_f(0.1f, 6.f);
 }
 
-void bort_update_default(Shader *shader, State *state, Borticle *bort, size_t index) {
+void bort_update_default(ShaderInfo *shader, State *state, Borticle *bort, size_t index) {
     if(!bort) {
         return;
     }

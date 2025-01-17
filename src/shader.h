@@ -3,7 +3,7 @@
 
 #include <glad/glad.h>
 
-typedef struct Shader {
+typedef struct ShaderInfo {
     GLuint program;
     GLuint vao[5];
     GLuint vbo[5];
@@ -16,7 +16,7 @@ typedef struct Shader {
     float mat_model[4][4];
     float mat_view[4][4];
     float mat_projection[4][4];
-} Shader;
+} ShaderInfo;
 
 unsigned int shader_load(const char *path, int type);
 int shader_set_uniform_mat4(unsigned int program, char *name, float mat[4][4]);
