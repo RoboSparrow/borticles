@@ -225,6 +225,8 @@ int main(int argc, char **argv) {
         bort_draw_2D(&bort, state);
         qtree_draw_2D(&qt, state);
 
+        draw_quad(50.f, 50.f, 250.f, 250.f);
+
         // finalize
         then = now;
         qnode_destroy(state->tree);

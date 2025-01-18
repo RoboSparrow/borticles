@@ -67,3 +67,24 @@ unsigned int shader_program(unsigned int vertexShader, unsigned int fragmentShad
 
     return program;
 }
+
+
+void draw_quad(float x, float y, float w, float h) {
+
+    GLfloat vertices[] = {
+        x,  y + h,    0.f, // sw
+        x,  y,        0.f, // nw
+        x + w, y,     0.f, // ne
+        x + w, y + h, 0.f  // se
+    };
+
+    GLubyte indices[] = {
+        0, 1, 2, // sw -> nw -> ne
+        0, 2, 3  // sw -> ne -> se
+    };
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(3, GL_FLOAT, 0, vertices);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, indices);
+    glDisableClientState(GL_VERTEX_ARRAY);
+}
