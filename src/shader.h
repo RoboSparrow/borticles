@@ -3,8 +3,6 @@
 
 #include <glad/glad.h>
 
-#include "vec.h"
-
 typedef struct ShaderInfo {
     GLuint program;
     GLuint vao[5];

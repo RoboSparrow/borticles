@@ -1,14 +1,14 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include <glad/glad.h>
-
 #include "utils.h"
 #include "log.h"
 
 #include "shader.h"
 #include "borticle.h"
 #include "state.h"
+
+#include <glad/glad.h>
 
 typedef enum {
     BUF_VERTEXES,

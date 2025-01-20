@@ -3,17 +3,22 @@ CC=gcc
 BIN=bin/borticles
 
 CFLAGS=-Wall -Wextra -Werror -Wpedantic -pedantic-errors
-LOPT=-lGL -lglfw -lm
-LOPT+=-I.
+LOPT= -lm
+LOPT+= -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+COPT=
 
 HEADERS=$(wildcard src/*.h)
 SOURCES=$(filter-out src/main.c, $(wildcard src/*.c))
-SOURCES+=$(wildcard src/external/*.c)
 SOURCES+=$(wildcard src/algorithms/*.c)
 OBJECTS=$(patsubst %.c, %.o, $(SOURCES))
-OBJECTS+=lib/glad/src/glad.o
 
-INCS=-Isrc -Ilib/glad/include
+INCS=-Isrc
+
+# glad (can be removed when fully migrated to raylib)
+SOURCES+=$(wildcard src/external/*.c)
+OBJECTS+=lib/glad/src/glad.o
+INCS+=-Ilib/glad/include
+# /glad
 
 .PHONY:	clean all prepare
 

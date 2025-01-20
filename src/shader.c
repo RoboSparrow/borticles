@@ -1,3 +1,5 @@
+#include "rlgl.h"
+
 #include "utils.h"
 #include "log.h"
 #include "shader.h"

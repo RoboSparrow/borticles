@@ -4,12 +4,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <unistd.h> // getopt
 
 #include <math.h>
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include "raylib.h"
+#include "rlgl.h"
 
 #include "utils.h"
 #include "log.h"
@@ -21,56 +20,6 @@
 #define MATH_3D_IMPLEMENTATION
 #include "external/math_3d.h"
 
-// globals
-double then;
-
-
-// Is called whenever a key is pressed/released via GLFW
-static void _key_callback(GLFWwindow* window, int key, int scancode, int action, int mode) {
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window, GL_TRUE);
-    }
-}
-
-/**
- *  glfw: whenever the window size changed (by OS or user resize) this callback function executes
- *      make sure the viewport matches the new window dimensions; note that width and
- *      height will be significantly larger than specified on retina displays.
- */
-static void _framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-    State *state = (State*)glfwGetWindowUserPointer(window);
-    state->width = width;
-    state->height = height;
-    glViewport(0, 0, state->width, state->height);
-}
-
-static void _error_callback(int err, const char* message) {
-    LOG_ERROR_F("GLFW Error (%d): %s", err, message);
-}
-
-/**
- * key input callback
- * @see https://www.glfw.org/docs/latest/input_guide.html#input_key
- * @see https://www.glfw.org/docs/latest/group__keys.html
- */
-static void _gl_key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
-
-    State *state = (State*)glfwGetWindowUserPointer(window);
-
-    if (action == GLFW_PRESS) {
-        switch (key) {
-        case GLFW_KEY_ESCAPE:
-        case GLFW_KEY_Q:
-            LOG_INFO("Closing app");
-            glfwSetWindowShouldClose(window, GL_TRUE);
-            break;
-        case GLFW_KEY_SPACE:
-            LOG_INFO("toggling pause");
-            state->paused = !state->paused;
-            break;
-        }
-    }
-}
 
 static void _configure(State *state, int argc, char **argv) {
 
@@ -135,42 +84,11 @@ static void _configure(State *state, int argc, char **argv) {
 
 int main(int argc, char **argv) {
 
-    time_t seed = time(NULL);
-    srand(seed); // set random seed
-
     State *state = state_create();
     _configure(state, argc, argv);
 
-    glfwSetErrorCallback(_error_callback);
-
-    // glfw
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-
     // window
-    GLFWwindow* window = glfwCreateWindow(state->width, state->height, "Borticles", NULL, NULL);
-    glfwMakeContextCurrent(window);
-
-    // store up for callback updates
-    glfwSetWindowUserPointer(window, state);
-
-    // glad
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        LOG_ERROR("Failed to initialize GLAD");
-        glfwTerminate();
-        return -1;
-    }
-
-    // viewport
-    glfwGetFramebufferSize(window, &state->width, &state->height);
-    glViewport(0, 0, state->width, state->height);
-
-    // glfw events
-    glfwSetFramebufferSizeCallback(window, _framebuffer_size_callback);
-    glfwSetKeyCallback(window, _gl_key_callback);
+    InitWindow(state->width, state->height, "Borticles");
 
     // we will render point sizes
     glEnable(GL_PROGRAM_POINT_SIZE);
@@ -195,23 +113,21 @@ int main(int argc, char **argv) {
     bort_init(&bort, state);
 
     // fps calc
-    double now, delta;
-    double max = 1.0 / state->fps;
-    then = glfwGetTime();
+    SetTargetFPS(state->fps);
 
     state_print(stdout, state);
 
-    while (!glfwWindowShouldClose(window)) {
-        // init
-        now = glfwGetTime();
-        if (now - then < max) {
-            continue;
+    while (!WindowShouldClose()) {
+
+        if (IsKeyPressed(KEY_SPACE)) {
+            state->paused = !state->paused;
         }
 
-        if (state->paused) {
-            glfwPollEvents();
+        if (state->paused) {;
             continue;
         }
+        BeginDrawing();
+
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -226,21 +142,22 @@ int main(int argc, char **argv) {
         qtree_draw_2D(&qt, state);
 
         // finalize
-        then = now;
         qnode_destroy(state->tree);
         state->tree = NULL;
 
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+        //debug render
+        DrawFPS(10, 10);
+
+        EndDrawing();
     }
 
     // cleanup
 
     bort_cleanup_shaders(&bort);
     qtree_cleanup_shaders(&qt);
-
     state_destroy(state);
-    glfwTerminate();
+
+    CloseWindow();
 
     return 0;
 }
