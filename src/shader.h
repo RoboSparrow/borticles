@@ -25,5 +25,4 @@ int shader_set_uniform_mat4(unsigned int program, char *name, float mat[4][4]);
 // TODO glDetachShader
 unsigned int shader_program(unsigned int vertexShader, unsigned int fragmentShader, unsigned int geometryShader);
 
-void draw_quad(float x, float y, float w, float h);
 #endif
