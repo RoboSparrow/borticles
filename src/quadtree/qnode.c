@@ -1,9 +1,10 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "qnode.h"
+
 #include "log.h"
 #include "utils.h"
-#include "quadtree.h"
 
 static int count = 0;
 
@@ -17,20 +18,6 @@ static unsigned int _has_duplicate_pos(QNode *node, vec2 pos) {
         }
     }
     return 0;
-}
-
-unsigned int _check_pos_inside(vec2 pos, rect outer) {
-    return outer.x <= pos.x
-        && outer.y <= pos.y
-        && outer.x + outer.width >= pos.x
-        && outer.y + outer.height >= pos.y;
-}
-
-unsigned int _check_rect_inside(rect inner, rect outer) {
-    return inner.x >= outer.x
-        && inner.y >= outer.y
-        && (inner.x + inner.width)  <= (outer.x + outer.width)
-        && (inner.y + inner.height) <= (outer.y + outer.height);
 }
 
 static QNode *_get_quadrant(vec2 pos, QNode *node) {
@@ -117,6 +104,27 @@ static int _get_region(QNode *root) {
     if (root->parent->sw == root) return QDIR_SW;
 
     return -1;
+}
+
+unsigned int _check_pos_inside(vec2 pos, rect outer) {
+    return outer.x <= pos.x
+        && outer.y <= pos.y
+        && outer.x + outer.width >= pos.x
+        && outer.y + outer.height >= pos.y;
+}
+
+unsigned int _check_rect_inside(rect inner, rect outer) {
+    return inner.x >= outer.x
+        && inner.y >= outer.y
+        && (inner.x + inner.width)  <= (outer.x + outer.width)
+        && (inner.y + inner.height) <= (outer.y + outer.height);
+}
+
+unsigned int _check_rect_overlaps(rect inner, rect outer) {
+    return inner.x < (outer.x + outer.width)
+        && inner.y < (outer.y + outer.height)
+        && (inner.x + inner.width)  > outer.x
+        && (inner.y + inner.height) > outer.y;
 }
 
 QNode *qnode_create(rect area) {

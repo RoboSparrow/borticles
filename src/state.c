@@ -1,9 +1,10 @@
 #include <stdlib.h>
 
+#include "quadtree/qnode.h"
+
+#include "vec.h"
 #include "state.h"
 #include "borticle.h"
-#include "quadtree.h"
-#include "vec.h"
 
 #include "utils.h"
 #include "log.h"
@@ -18,6 +19,9 @@ State *state_create() {
     state->fps = 32;
     state->paused = 0;
 
+    state->bg_color = (Color) {51, 77, 77, 255};
+    state->fg_color = (Color) {255, 255, 255, 255};
+
     state->grav_g = 9.81f;
 
     state->pop_max = POP_MAX;
@@ -25,13 +29,14 @@ State *state_create() {
 
     state->population = NULL;
     state->tree = NULL;
+
     state->positions = NULL;
     state->colors = NULL;
 
     return state;
 }
 
-void state_set_len(State *state, unsigned int len) {
+void state_set_pop_len(State *state, unsigned int len) {
     if (!state) {
         return;
     };
@@ -94,6 +99,8 @@ void state_print(FILE *fp, State *state) {
         "  height: %d\n"
         "  fps: %d\n"
         "  paused: %d\n"
+        "  fg_color: {%d,%d,%d,%d}\n"
+        "  bg_color: {%d,%d,%d,%d}\n"
         "  algorithms: %d\n"
         "  grav_g: %.2f\n"
         "  pop_max: %d\n"
@@ -107,6 +114,8 @@ void state_print(FILE *fp, State *state) {
         state->height,
         state->fps,
         state->paused,
+        state->fg_color.r, state->fg_color.g, state->fg_color.b, state->fg_color.a,
+        state->bg_color.r, state->bg_color.g, state->bg_color.b, state->bg_color.a,
         state->algorithms,
         state->grav_g,
         state->pop_max,

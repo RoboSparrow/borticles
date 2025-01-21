@@ -1,5 +1,5 @@
-#ifndef __QUADTREE_H__
-#define __QUADTREE_H__
+#ifndef __QNODE_H__
+#define __QNODE_H__
 
 #include <stdio.h>
 #include "vec.h"
@@ -65,6 +65,11 @@ void qnode_walk(QNode *root, void (*descent)(QNode *node), void (*ascent)(QNode 
 void qnode_destroy(QNode *node);
 
 size_t qnode_count(QNode *root); // counts quads! TODO, count on creation
-
 void qnode_print(FILE *fp, QNode *node);
+
+// exposed for tests
+unsigned int _check_pos_inside(vec2 pos, rect outer);
+unsigned int _check_rect_inside(rect inner, rect outer);
+unsigned int _check_rect_overlaps(rect inner, rect outer);
+
 #endif

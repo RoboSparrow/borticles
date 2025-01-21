@@ -3,6 +3,8 @@
 
 #include <glad/glad.h>
 
+typedef struct State State;
+
 typedef struct ShaderInfo {
     GLuint program;
     GLuint vao[5];
@@ -22,5 +24,10 @@ unsigned int shader_load(const char *path, int type);
 int shader_set_uniform_mat4(unsigned int program, char *name, float mat[4][4]);
 // TODO glDetachShader
 unsigned int shader_program(unsigned int vertexShader, unsigned int fragmentShader, unsigned int geometryShader);
+
+// rendering
+void qtree_init_shaders(ShaderInfo *shader);
+void qtree_draw_2D(ShaderInfo *shader, State *state);
+void qtree_cleanup_shaders(ShaderInfo *shader);
 
 #endif

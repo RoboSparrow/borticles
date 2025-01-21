@@ -7,19 +7,22 @@
 #include <unistd.h> // getopt
 
 #include <math.h>
+#include <time.h>
+
 #include "raylib.h"
 #include "rlgl.h"
+
+#include "quadtree/qnode.h"
 
 #include "utils.h"
 #include "log.h"
 
-#include "borticle.h"
-#include "quadtree.h"
 #include "state.h"
+#include "borticle.h"
+#include "algorithms.h"
 
 #define MATH_3D_IMPLEMENTATION
 #include "external/math_3d.h"
-
 
 static void _configure(State *state, int argc, char **argv) {
 
@@ -73,16 +76,18 @@ static void _configure(State *state, int argc, char **argv) {
         }
     }
 
-    state_set_len(state, pop_len);
+    state_set_pop_len(state, pop_len);
     state->algorithms = ALGO_NONE;
 
-    // dev algorithm
+    // dev algorithm TODO param & default
     state->algorithms |= ALGO_ATTRACTION;
 
     // state_print(stdout, state);
 }
 
 int main(int argc, char **argv) {
+    // set random seed
+    srand(time(NULL));
 
     State *state = state_create();
     _configure(state, argc, argv);
@@ -126,11 +131,10 @@ int main(int argc, char **argv) {
         if (state->paused) {;
             continue;
         }
+
         BeginDrawing();
 
-
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        ClearBackground(state->bg_color);
 
         // update
         state->tree = qnode_create((rect){0.f, 0.f, (float)state->width, (float)state->height});
