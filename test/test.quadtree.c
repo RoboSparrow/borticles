@@ -4,10 +4,68 @@
 #include <assert.h>
 
 #include "test.h"
-#include "quadtree.h"
-
+#include "vec.h"
+#include "quadtree/qnode.h"
 
 static unsigned int capacity = QNODE_CAPACITY;
+
+static void test_check_rect_inside() {
+    DESCRIBE("_check_rect_inside()");
+    unsigned int is;
+    rect inner;
+    rect outer = (rect) {0.f, 0.f, 800.f, 600.f};
+
+    // outside
+    inner = (rect){ 801.f, 601.f, 1.f, 1.f};
+    is = _check_rect_inside(inner, outer);
+    assert(is == 0);
+
+    // overlap
+    inner = (rect){ 100.f, 100.f, 800.f, 600.f};
+    is = _check_rect_inside(inner, outer);
+    assert(is == 0);
+
+    // inside
+    inner = (rect){ 100.f,100.f, 100.f, 100.f};
+    is = _check_rect_inside(inner, outer);
+    assert(is == 1);
+
+    // match
+    inner = (rect){ outer.x, outer.y, outer.width, outer.height};
+    is = _check_rect_inside(inner, outer);
+    assert(is == 1);
+
+    DONE();
+}
+
+static void test_check_rect_overlaps() {
+    DESCRIBE("_check_rect_overlaps()");
+    unsigned int is;
+    rect inner;
+    rect outer = (rect) {0.f, 0.f, 800.f, 600.f};
+
+    // outside
+    inner = (rect){ -1.f, -1.f, 1.f, 1.f};
+    is = _check_rect_overlaps(inner, outer);
+    assert(is == 0);
+
+    // overlap
+    inner = (rect){ -1.f, -1.f, 2.f, 2.f};
+    is = _check_rect_overlaps(inner, outer);
+    assert(is == 1);
+
+    // inside
+    inner = (rect){ 1.f, 1.f, 1.f, 1.f};
+    is = _check_rect_overlaps(inner, outer);
+    assert(is == 1);
+
+    // match
+    inner = (rect){ outer.x, outer.y, outer.width, outer.height};
+    is = _check_rect_overlaps(inner, outer);
+    assert(is == 1);
+
+    DONE();
+}
 
 static void test_tree() {
     DESCRIBE("node");
@@ -158,6 +216,9 @@ static void test_duplicate_pos() {
 
 void test_quadtree(int argc, char **argv) {
     QNode *root;
+
+    test_check_rect_inside();
+    test_check_rect_overlaps();
 
     test_tree();
     test_duplicate_pos();

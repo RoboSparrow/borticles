@@ -1,5 +1,5 @@
 ////
-// clear && make clean && make && ./critters -f 50 -g 5x5 -c 5 -D
+// clear && make clean && make && make test && ./bin/test
 ////
 
 #include <stdio.h>
