@@ -1,11 +1,11 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include "external/math_3d.h"
-
+#include "vec.h"
 #include "shader.h"
-#include "borticle.h"
+
 #include "state.h"
+#include "borticle.h"
 
 static void _update_size(ShaderInfo *shader, State *state, Borticle *bort, size_t index) {}
 
