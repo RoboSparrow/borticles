@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include "raylib.h"
 
-#include "quadtree/qnode.h"
+#include "qtree/qtree.h"
 
 #include "vec.h"
 #include "borticle.h"
@@ -34,7 +34,7 @@ typedef struct State {
     unsigned int pop_len;
 
     Borticle *population;
-    QNode *tree;
+    QTree *tree;
 
     // vbos
     vec4 *positions;

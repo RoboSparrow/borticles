@@ -2,7 +2,7 @@
 #define __BORTICLE_H__
 
 #include "external/math_3d.h"
-#include "quadtree/qnode.h"
+#include "qtree/qtree.h"
 
 #include "vec.h"
 #include "utils.h"
@@ -13,10 +13,8 @@ typedef struct State State;
 typedef struct {
     unsigned int id;
     vec3_t pos, vel, acc;
-    float size;  // TODO replace with pointer to flat array
-    rgba  color; // TODO replace with pointer to flat array
-
-    QNode *quadrant; // current qtree quadrant
+    float size;  // TODO replace with pointer to vbo array
+    rgba  color; // TODO replace with pointer to vbo array
 } Borticle;
 
 void bort_print(FILE *fp, Borticle *bort);

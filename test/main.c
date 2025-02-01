@@ -15,12 +15,15 @@
 enum Sections {
     TEST_NONE,
     TEST_QTREE,
+    TEST_QLIST,
+
     TEST_MAX
 };
 
 char sections[][256] = {
     "TEST_NONE",
     "TEST_QTREE",
+    "TEST_QLIST",
     "TEST_MAX"
 };
 
@@ -118,11 +121,14 @@ int main(int argc, char **argv) {
         }
 
         if (section == TEST_QTREE || section == TEST_MAX) {
-            // test.vec2.c
             SECTION(sections[TEST_QTREE]);
             test_quadtree(argc, argv);
         }
 
+        if (section == TEST_QLIST || section == TEST_MAX) {
+            SECTION(sections[TEST_QLIST]);
+            test_grid(argc, argv);
+        }
     }
 
     fprintf(stderr,

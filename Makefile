@@ -9,7 +9,7 @@ COPT=
 
 HEADERS=$(wildcard src/*.h)
 SOURCES=$(filter-out src/main.c, $(wildcard src/*.c))
-SOURCES+=$(wildcard src/algorithms/*.c) $(wildcard src/quadtree/*.c)
+SOURCES+=$(wildcard src/algorithms/*.c) $(wildcard src/qtree/*.c)
 OBJECTS=$(patsubst %.c, %.o, $(SOURCES))
 
 INCS=-Isrc

@@ -9,6 +9,9 @@
 #define LOG_INFO(msg) LOG("info", msg)
 #define LOG_INFO_F(fmt, ...) LOG_F("info", fmt, __VA_ARGS__)
 
+#define LOG_WARN(msg) LOG("warn", msg)
+#define LOG_WARN_F(fmt, ...) LOG_F("warn", fmt, __VA_ARGS__)
+
 #define LOG_ERROR(msg) LOG("error", msg)
 #define LOG_ERROR_F(fmt, ...) LOG_F("error", fmt, __VA_ARGS__)
 

@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "quadtree/qnode.h"
+#include "qtree/qtree.h"
 
 #include "vec.h"
 #include "state.h"
@@ -66,7 +66,7 @@ void state_set_pop_len(State *state, unsigned int len) {
     EXIT_IF(state->colors == NULL, "failed to (re)allocate for State->colors");
 
     // also destroy the actual qtree
-    qnode_destroy(state->tree);
+    qtree_destroy(state->tree);
     state->tree= NULL;
 
 }
@@ -79,7 +79,7 @@ void state_destroy(State *state) {
     freez(state->population);
     freez(state->positions);
     freez(state->colors);
-    qnode_destroy(state->tree);
+    qtree_destroy(state->tree);
 
     freez(state);
 }

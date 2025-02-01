@@ -12,7 +12,7 @@
 #include "shader.h"
 #include "borticle.h"
 
-#include "quadtree/qnode.h"
+#include "qtree/qtree.h"
 
 typedef enum {
     BUF_VERTEXES,
@@ -90,14 +90,13 @@ void bort_init(ShaderInfo *shader, State *state) {
         bort->id = i;
         bort->pos = (vec3_t) {hw, hh, 0.f};
         bort->color = (rgba) {1.f, 1.f, 1.f, 1.f};
-        bort->quadrant = NULL;
 
         if (state->algorithms == ALGO_NONE) {
             bort_init_default(shader, state, bort, i);
         }
 
-        if ((state->algorithms & ALGO_ATTRACTION) > 0) {
-            bort_init_attraction(shader, state, bort, i);
+        if (state->algorithms & ALGO_NOMADIC) {
+            bort_init_nomadic(shader, state, bort, i);
         }
     }
 }
@@ -107,37 +106,56 @@ void bort_init(ShaderInfo *shader, State *state) {
  */
 void bort_update(ShaderInfo *shader, State *state) {
     Borticle *bort;
+    unsigned int i;
 
-    for (size_t i = 0; i < state->pop_len; i++) {
+    // build qtree and prepare vbos for drawing
+
+    for (i = 0; i < state->pop_len; i++) {
         bort = &state->population[i];
-
-        if (state->algorithms == ALGO_NONE) {
-            bort_update_default(shader, state, bort, i);
+        if (!bort) {
+            LOG_WARN_F("no borticle stored in population slot %d", i);
+            continue;
         }
 
-        if ((state->algorithms & ALGO_ATTRACTION) > 0) {
-            bort_update_attraction(shader, state, bort, i);
-        }
+        // insert boricle into qtree
+
+        int res = qtree_insert(
+            state->tree,
+            bort,
+            (vec2) {
+                bort->pos.x,
+                bort->pos.y
+            }
+        );
 
         // update vertex data for vbos
+
         state->positions[i] = (vec4) {
             bort->pos.x,
             bort->pos.y,
             bort->pos.z,
             bort->size
         };
+
         state->colors[i] = bort->color;
+    }
 
-        // insert boricle into qtree
-        bort->quadrant = qnode_insert(
-            state->tree,
-            (vec2) {
-                bort->pos.x,
-                bort->pos.y
-            },
-            state->population[i].id
-        );
+    // apply algorithms (changes are drawn in nect cycle)
 
+    for (i = 0; i < state->pop_len; i++) {
+        bort = &state->population[i];
+
+        if (!bort) {
+            continue;
+        }
+
+        if (state->algorithms == ALGO_NONE) {
+            bort_update_default(shader, state, bort, i);
+        }
+
+        if (state->algorithms & ALGO_NOMADIC) {
+            bort_update_nomadic(shader, state, bort, i);
+        }
         // bort_print(stdout, bort);
     }
 }
@@ -208,7 +226,7 @@ void bort_print(FILE *fp, Borticle *bort) {
         "  acc: {%.2f, %.2f, %.2f}\n"
         "  size: %.2f\n"
         "  color: {%.2f, %.2f, %.2f, %.2f}\n"
-        ,
+        "}\n",
 
         bort->id,
         bort->pos.x, bort->pos.y, bort->pos.z,
@@ -217,19 +235,4 @@ void bort_print(FILE *fp, Borticle *bort) {
         bort->size,
         bort->color.r, bort->color.g, bort->color.b, bort->color.a
     );
-
-    if (bort->quadrant) {
-        fprintf(fp,
-            "  quadrant: {depth:%d, sz:%ld, area:{x:%.2f, y:%.2f, w:%.2f, h:%.2f}}\n",
-            bort->quadrant->depth,
-            bort->quadrant->sz,
-            bort->quadrant->area.x, bort->quadrant->area.y, bort->quadrant->area.width, bort->quadrant->area.height
-        );
-    } else {
-        fprintf(fp,
-            "  quadrant: <NULL>\n"
-        );
-    }
-
-    fprintf(fp, "}\n");
 }

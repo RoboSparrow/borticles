@@ -1,5 +1,6 @@
 ////
 // clear && make clean && make && ./bin/borticles
+// clear && make clean && make && make test && ./bin/test
 ////
 
 #include <stdio.h>
@@ -12,7 +13,7 @@
 #include "raylib.h"
 #include "rlgl.h"
 
-#include "quadtree/qnode.h"
+#include "qtree/qtree.h"
 
 #include "utils.h"
 #include "log.h"
@@ -78,9 +79,7 @@ static void _configure(State *state, int argc, char **argv) {
 
     state_set_pop_len(state, pop_len);
     state->algorithms = ALGO_NONE;
-
-    // dev algorithm TODO param & default
-    state->algorithms |= ALGO_ATTRACTION;
+    state->algorithms |= ALGO_NOMADIC; // DEV TODO
 
     // state_print(stdout, state);
 }
@@ -137,16 +136,18 @@ int main(int argc, char **argv) {
         ClearBackground(state->bg_color);
 
         // update
-        state->tree = qnode_create((rect){0.f, 0.f, (float)state->width, (float)state->height});
+        state->tree = qtree_create((vec2){0.f, 0.f}, (vec2){(float) state->width, (float) state->height});
         bort_update(&bort, state);
+
         // state_print(stdout, state);
+        // qtree_print(stdout, state->tree);
 
         // draw
         bort_draw_2D(&bort, state);
         qtree_draw_2D(&qt, state);
 
         // finalize
-        qnode_destroy(state->tree);
+        qtree_destroy(state->tree);
         state->tree = NULL;
 
         //debug render
@@ -161,7 +162,7 @@ int main(int argc, char **argv) {
     qtree_cleanup_shaders(&qt);
     state_destroy(state);
 
-    CloseWindow();
+    CloseWindow();        // Close window and OpenGL context
 
     return 0;
 }
