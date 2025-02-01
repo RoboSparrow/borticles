@@ -20,11 +20,11 @@ static int _in_list(int id, QList *list) {
                 return 1;
             }
         }
-    }Vec2
+    }
     return 0;
 }
 
-void test_qlist_core(int argc, char **argv) {
+static void test_qlist_core() {
     {
         DESCRIBE("qlist_create()");
 
@@ -102,7 +102,7 @@ void test_qlist_core(int argc, char **argv) {
 
         DONE();
     }
-}Vec2
+}
 
 static void test_qnode_within_area() {
     DESCRIBE("node covered by area");

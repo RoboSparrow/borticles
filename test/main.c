@@ -122,12 +122,12 @@ int main(int argc, char **argv) {
 
         if (section == TEST_QTREE || section == TEST_MAX) {
             SECTION(sections[TEST_QTREE]);
-            test_quadtree(argc, argv);
+            test_qtree(argc, argv);
         }
 
         if (section == TEST_QLIST || section == TEST_MAX) {
             SECTION(sections[TEST_QLIST]);
-            test_grid(argc, argv);
+            test_qlist(argc, argv);
         }
     }
 
