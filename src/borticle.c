@@ -7,7 +7,6 @@
 #include "log.h"
 
 #include "state.h"
-#include "algorithms.h"
 
 #include "shader.h"
 #include "borticle.h"

@@ -9,6 +9,13 @@
 #include "utils.h"
 #include "log.h"
 
+// @see enum Algotithm
+char algorithms[ALGO_NUM][64] = { "ALGO_NONE", "ALGO_ATTRACTION", "ALGO_NOMADIC"};
+
+////
+// State
+////
+
 State *state_create() {
     State *state = malloc(sizeof(State));
     EXIT_IF(state == NULL, "failed to allocate for State");
@@ -21,6 +28,8 @@ State *state_create() {
 
     state->bg_color = (Color) {51, 77, 77, 255};
     state->fg_color = (Color) {255, 255, 255, 255};
+
+    state->algorithms = ALGO_NONE;
 
     state->grav_g = 9.81f;
 
@@ -137,3 +146,7 @@ Borticle *state_get_borticle(State *state, int index) {
 
     return NULL;
 }
+
+////
+// Algorithms
+////

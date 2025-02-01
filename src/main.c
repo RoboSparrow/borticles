@@ -5,6 +5,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
+#include <string.h>
 #include <unistd.h> // getopt
 
 #include <math.h>
@@ -20,66 +22,86 @@
 
 #include "state.h"
 #include "borticle.h"
-#include "algorithms.h"
 
 #define MATH_3D_IMPLEMENTATION
 #include "external/math_3d.h"
 
 static void _configure(State *state, int argc, char **argv) {
 
+#include <string.h>
     int opt, ival;
     float fval;
     unsigned int pop_len = POP_MAX;
 
-    char usage[] = "usage: %s [-h] [-p particles:number] [-f fps] [-g fgravity constant] [-P paused]\n";
-    while ((opt = getopt(argc, argv, "f:g:p:Ph")) != -1) {
+    // default
+    state->algorithms |= ALGO_NOMADIC;
+
+    char usage[] = "usage: %s [-h] [-f fps] [-g fgravity constant] [-p particles:number] [-a algorithms <int,int, ...>] [-P paused]\n";
+    while ((opt = getopt(argc, argv, "f:g:p:a:Ph")) != -1) {
         switch (opt) {
-        case 'p':
-            ival = atoi(optarg);
-            if (!ival || ival < 0) {
-                fprintf(stderr, "invalid '%c' option value\n", opt);
-                exit(1);
+            case 'p':
+                ival = atoi(optarg);
+                if (!ival || ival < 0) {
+                    fprintf(stderr, "invalid '%c' option value\n", opt);
+                    exit(1);
+                }
+
+                pop_len = ival;
+            break;
+
+            case 'f':
+                ival = atoi(optarg);
+                if (!ival || ival < 0) {
+                    fprintf(stderr, "invalid 'f' option value\n");
+                    exit(1);
+                }
+
+                state->fps = ival;
+            break;
+
+            case 'g':
+                fval = atof(optarg);
+                if (!fval || fval < 0.f) {
+                    fprintf(stderr, "invalid 'g' option value\n");
+                    exit(1);
+                }
+
+                state->grav_g = fval;
+            break;
+
+            case 'a': {
+                state->algorithms = 0; // reset
+                ival = -1;
+                char *pt;
+                pt = strtok (optarg, ",");
+                while (pt != NULL) {
+                    int ival = atoi(pt);
+                    if (ival < 0 || ival > ALGO_NUM -1) {
+                        fprintf(stderr, "invalid 'a' option value\n");
+                        exit(1);
+                    }
+                    state->algorithms |= ival;
+                    pt = strtok (NULL, ",");
+                }
             }
-
-            pop_len = ival;
             break;
 
-        case 'f':
-            ival = atoi(optarg);
-            if (!ival || ival < 0) {
-                fprintf(stderr, "invalid 'f' option value\n");
-                exit(1);
-            }
-
-            state->fps = ival;
+            case 'P':
+                state->paused = 1;
             break;
 
-        case 'g':
-            fval = atof(optarg);
-            if (!fval || fval < 0.f) {
-                fprintf(stderr, "invalid 'g' option value\n");
-                exit(1);
-            }
+            case 'h':
 
-            state->grav_g = fval;
-            break;
-
-        case 'P':
-            state->paused = 1;
-            break;
-
-        case 'h':
-
-        case '?':
-            fprintf(stderr, usage, argv[0]);
-            exit(0);
+            case '?':
+                fprintf(stderr, usage, argv[0]);
+                exit(0);
             break;
         }
     }
 
     state_set_pop_len(state, pop_len);
-    state->algorithms = ALGO_NONE;
-    state->algorithms |= ALGO_NOMADIC; // DEV TODO
+    //state->algorithms = ALGO_NONE;
+    //state->algorithms = ALGO_NOMADIC; // DEV TODO
 
     // state_print(stdout, state);
 }
