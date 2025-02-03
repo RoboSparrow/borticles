@@ -26,8 +26,8 @@ void bort_init_shaders_data(ShaderInfo *shader, State *state);
 void bort_cleanup_shaders(ShaderInfo *shader);
 
 // population
-void bort_init(ShaderInfo *shader, State *state);
-void bort_update(ShaderInfo *shader, State *state);
+void bort_init(State *state, unsigned int start, unsigned int end);
+void bort_update(State *state);
 void bort_draw_2D(ShaderInfo *shader, State *state);
 
 #endif

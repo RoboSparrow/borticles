@@ -17,14 +17,19 @@
 
 #include "qtree/qtree.h"
 
-#include "utils.h"
 #include "log.h"
+#include "utils.h"
 
 #include "state.h"
 #include "borticle.h"
 
+#include "ui.h"
+
 #define MATH_3D_IMPLEMENTATION
 #include "external/math_3d.h"
+
+#define RAYGUI_IMPLEMENTATION
+#include "external/raygui.h"
 
 static void _configure(State *state, int argc, char **argv) {
 
@@ -115,6 +120,7 @@ int main(int argc, char **argv) {
 
     // window
     InitWindow(state->width, state->height, "Borticles");
+    ui_init(state);
 
     // we will render point sizes
     glEnable(GL_PROGRAM_POINT_SIZE);
@@ -136,7 +142,7 @@ int main(int argc, char **argv) {
     bort_init_matrices(&qt, model.m, view.m, projection.m);// TODO make common funcname name
 
     // init population
-    bort_init(&bort, state);
+    bort_init(state, 0, state->pop_len);
 
     // fps calc
     SetTargetFPS(state->fps);
@@ -149,7 +155,12 @@ int main(int argc, char **argv) {
             state->paused = !state->paused;
         }
 
-        if (state->paused) {;
+        if (state->paused) {
+
+            BeginDrawing();
+            ui_draw(state);
+            EndDrawing();
+
             continue;
         }
 
@@ -159,7 +170,8 @@ int main(int argc, char **argv) {
 
         // update
         state->tree = qtree_create((vec2){0.f, 0.f}, (vec2){(float) state->width, (float) state->height});
-        bort_update(&bort, state);
+        bort_update(state);
+        ui_update(state);
 
         // state_print(stdout, state);
         // qtree_print(stdout, state->tree);
@@ -167,13 +179,11 @@ int main(int argc, char **argv) {
         // draw
         bort_draw_2D(&bort, state);
         qtree_draw_2D(&qt, state);
+        ui_draw(state);
 
         // finalize
         qtree_destroy(state->tree);
         state->tree = NULL;
-
-        //debug render
-        DrawFPS(10, 10);
 
         EndDrawing();
     }

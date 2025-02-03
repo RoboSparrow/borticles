@@ -213,6 +213,10 @@ void qtree_draw_2D(ShaderInfo *shader, State *state) {
         return;
     }
 
+    if (!state->ui_qtree) {
+        return;
+    }
+
     //qnode_walk(state->tree->root, _qtree_draw_quad, NULL);
     //return;
     // update

@@ -75,15 +75,27 @@ void bort_init_shaders_data(ShaderInfo *shader, State *state) {
 }
 
 /**
- * Initializes a poplation of borticles
+ * Initializes a segment population of borticles from a certain offset to state_>pop_len
+ * Note that state->population MUST be already allocated with the proper length.
  */
-void bort_init(ShaderInfo *shader, State *state) {
+void bort_init(State *state, unsigned int start, unsigned int end) {
     Borticle *bort;
+
+    if (start > end) {
+        LOG_ERROR_F("invalid start or end param: start %d > end %d (pop_len %d)", start, end, state->pop_len);
+        return;
+    }
+
+    if (start > state->pop_len || end > state->pop_len) {
+        LOG_ERROR_F("invalid start or end param: start %d end %d > pop_len %d", start, end, state->pop_len);
+        return;
+    }
+
 
     float hw = (float) state->width / 2;
     float hh = (float) state->height / 2;
 
-    for (size_t i = 0; i < state->pop_len; i++) {
+    for (unsigned int i = start; i < end; i++) {
         bort = &state->population[i];
 
         bort->id = i;
@@ -91,11 +103,11 @@ void bort_init(ShaderInfo *shader, State *state) {
         bort->color = (rgba) {1.f, 1.f, 1.f, 1.f};
 
         if (state->algorithms == ALGO_NONE) {
-            bort_init_default(shader, state, bort, i);
+            bort_init_default(state, bort, i);
         }
 
         if (state->algorithms & ALGO_NOMADIC) {
-            bort_init_nomadic(shader, state, bort, i);
+            bort_init_nomadic(state, bort, i);
         }
     }
 }
@@ -103,7 +115,7 @@ void bort_init(ShaderInfo *shader, State *state) {
 /**
  * Updates a poplation of borticles
  */
-void bort_update(ShaderInfo *shader, State *state) {
+void bort_update(State *state) {
     Borticle *bort;
     unsigned int i;
 
@@ -137,6 +149,7 @@ void bort_update(ShaderInfo *shader, State *state) {
         };
 
         state->colors[i] = bort->color;
+        // printf("--  %i:%i, %f (%ld)\n", i, bort->id, bort->size, state->pop_len);
     }
 
     // apply algorithms (changes are drawn in nect cycle)
@@ -149,11 +162,11 @@ void bort_update(ShaderInfo *shader, State *state) {
         }
 
         if (state->algorithms == ALGO_NONE) {
-            bort_update_default(shader, state, bort, i);
+            bort_update_default(state, bort, i);
         }
 
         if (state->algorithms & ALGO_NOMADIC) {
-            bort_update_nomadic(shader, state, bort, i);
+            bort_update_nomadic(state, bort, i);
         }
         // bort_print(stdout, bort);
     }
@@ -164,6 +177,9 @@ void bort_update(ShaderInfo *shader, State *state) {
  */
 void bort_draw_2D(ShaderInfo *shader, State *state) {
     if (!shader) {
+        return;
+    }
+    if (!state->ui_borticles) {
         return;
     }
     glUseProgram(shader->program);

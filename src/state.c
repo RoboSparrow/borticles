@@ -9,6 +9,8 @@
 #include "utils.h"
 #include "log.h"
 
+#include "ui.h"
+
 // @see enum Algotithm
 char algorithms[ALGO_NUM][64] = { "ALGO_NONE", "ALGO_ATTRACTION", "ALGO_NOMADIC"};
 
@@ -42,28 +44,36 @@ State *state_create() {
     state->positions = NULL;
     state->colors = NULL;
 
+    state->ui_minimized = 0;
+
+    state->ui_debug = 0;
+    state->ui_borticles = 1;
+    state->ui_qtree = 1;
+
     return state;
 }
 
 void state_set_pop_len(State *state, unsigned int len) {
-    if (!state) {
+    if (!state || len <= 0) {
         return;
     };
 
-    if (len == 0) {
+    if (len <= 0) {
         freez(state->population);
         state->population = NULL;
         freez(state->positions);
         state->positions = NULL;
         freez(state->colors);
         state->colors = NULL;
+        return;
     }
 
     if (len > state->pop_max) {
         LOG_ERROR_F("State: length '%d' exceeds map pop_max, value capped to '%d'", len, state->pop_max);
         len = state->pop_max;
     }
-    state->pop_len = len;
+
+    unsigned int prev = state->pop_len;
 
     state->population = realloc(state->population, len * sizeof(Borticle));
     EXIT_IF(state->population == NULL, "failed to (re)allocate for State->population");
@@ -74,9 +84,16 @@ void state_set_pop_len(State *state, unsigned int len) {
     state->colors = realloc(state->colors, len * sizeof(rgba));
     EXIT_IF(state->colors == NULL, "failed to (re)allocate for State->colors");
 
+    state->pop_len = len;
+
+    // fill borticles
+    if (len > prev) {
+        bort_init(state, prev, len);
+    }
+
     // also destroy the actual qtree
     qtree_destroy(state->tree);
-    state->tree= NULL;
+    state->tree = NULL;
 
 }
 
@@ -117,6 +134,10 @@ void state_print(FILE *fp, State *state) {
         "  population: %s\n"
         "  positions: %s\n"
         "  colors: %s\n"
+        "  ui_minimized: %d\n"
+        "  ui_debug: %d\n"
+        "  ui_borticles: %d\n"
+        "  ui_qtree: %d\n"
         "}\n",
 
         state->width,
@@ -131,7 +152,11 @@ void state_print(FILE *fp, State *state) {
         state->pop_len,
         (state->population) ? "[...]" : "<NULL>",
         (state->positions) ? "[...]" : "<NULL>",
-        (state->colors) ? "[...]" : "<NULL>"
+        (state->colors) ? "[...]" : "<NULL>",
+        state->ui_minimized,
+        state->ui_debug,
+        state->ui_borticles,
+        state->ui_qtree
     );
 }
 

@@ -2,6 +2,7 @@
 #define __LOG_H__
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #define LOG(sev, msg) do { fprintf(stderr, "[%s](%s:%d) %s\n", sev, __FILE__, __LINE__, msg); } while (0)
 #define LOG_F(sev, fmt, ...) do { fprintf(stderr, "[%s](%s:%d) " fmt "\n", sev, __FILE__, __LINE__, __VA_ARGS__); } while (0)

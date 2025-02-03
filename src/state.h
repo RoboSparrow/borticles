@@ -22,13 +22,13 @@ typedef struct State {
     int width, height;
 
     unsigned int fps;
-    unsigned int paused;
+    bool paused;
 
     Color bg_color;
     Color fg_color;
 
     // algorithms
-    unsigned int algorithms;
+    unsigned int algorithms; // bitflag
 
     // Gravitational constant G
     float grav_g;
@@ -43,6 +43,13 @@ typedef struct State {
     // vbos
     vec4 *positions;
     rgba *colors;
+
+    // ui
+    bool ui_minimized;
+
+    bool ui_debug;
+    bool ui_borticles;
+    bool ui_qtree;
 
 } State;
 
@@ -69,9 +76,9 @@ extern char algorithms[ALGO_NUM][64];
 
 // algorithm handlers
 
-void bort_init_default(ShaderInfo *shader, State *state, Borticle *bort, size_t index);
-void bort_update_default(ShaderInfo *shader, State *state, Borticle *bort, size_t index);
+void bort_init_default(State *state, Borticle *bort, size_t index);
+void bort_update_default(State *state, Borticle *bort, size_t index);
 
-void bort_init_nomadic(ShaderInfo *shader, State *state, Borticle *bort, size_t index);
-void bort_update_nomadic(ShaderInfo *shader, State *state, Borticle *bort, size_t index);
+void bort_init_nomadic(State *state, Borticle *bort, size_t index);
+void bort_update_nomadic(State *state, Borticle *bort, size_t index);
 #endif
