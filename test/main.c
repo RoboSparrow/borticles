@@ -10,6 +10,12 @@
 #include <time.h>
 #include <string.h>
 
+#define MATH_3D_IMPLEMENTATION
+#include "external/math_3d.h"
+
+#define RAYGUI_IMPLEMENTATION
+#include "external/raygui.h"
+
 #include "test.h"
 
 enum Sections {

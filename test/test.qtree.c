@@ -30,9 +30,6 @@ static void test_tree() {
     assert(root->self_se.x == 600.0);
     assert(root->self_se.y == 400.0);
 
-    assert(root->width == 600.0);
-    assert(root->height == 400.0);
-
     qtree_destroy(tree);
     DONE();
 }
@@ -63,9 +60,6 @@ static void test_node_bounds() {
     assert(node->self_nw.y == 2.0);
     assert(node->self_se.x == 2.0);
     assert(node->self_se.y == 4.0);
-
-    assert(node->width == 1.0);
-    assert(node->height == 2.0);
 
     qnode_destroy(node);
     DONE();

@@ -39,9 +39,6 @@ typedef struct QNode {
     vec2 self_nw;
     vec2 self_se;
 
-    float width;
-    float height;
-
     vec2 pos;
     void *data;
 } QNode;

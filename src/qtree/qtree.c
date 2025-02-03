@@ -143,15 +143,14 @@ static int _node_split(QTree *tree, QNode *node) {
     // └────────────┴────────────x
     //                     se(x,y)
 
-    float hw = node->width / 2;
-    float hh = node->height / 2;
-
     float minx = node->self_nw.x;
     float miny = node->self_nw.y;
-    float ctrx = minx + hw;
-    float ctry = miny + hh;
+
     float maxx = node->self_se.x;
     float maxy = node->self_se.y;
+
+    float ctrx = minx + ((maxx - minx) / 2);
+    float ctry = miny + ((maxy - miny) / 2);
 
     /*                         nw                     se              */
     qnode_set_bounds(nw, (vec2){minx, miny}, (vec2){ctrx, ctry});
@@ -266,9 +265,6 @@ QNode *qnode_create(QNode *parent) {
     node->self_nw = (vec2){0};
     node->self_se = (vec2){0};
 
-    node->width = 0;
-    node->height = 0;
-
     _node_clear_data(node);
     return node;
 }
@@ -326,8 +322,6 @@ int qnode_overlaps_area(QNode *node, vec2 nw, vec2 se) {
 void qnode_set_bounds(QNode *node, vec2 nw, vec2 se) {
     node->self_nw = nw;
     node->self_se = se;
-    node->width = fabs(nw.x - se.x);
-    node->height = fabs(nw.y - se.y);
 }
 
 /**
