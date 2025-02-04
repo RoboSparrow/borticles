@@ -64,7 +64,6 @@ int qnode_ispointer(QNode *node);
 int qnode_within_area(QNode *node, vec2 nw, vec2 se);
 int qnode_overlaps_area(QNode *node, vec2 nw, vec2 se);
 
-void qnode_set_bounds(QNode *node, vec2 nw, vec2 se);
 void qnode_walk(QNode *node, void (*descent)(QNode *node), void (*ascent)(QNode *node));
 
 void qtree_print(FILE *fp, QTree *tree);

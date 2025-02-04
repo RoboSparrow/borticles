@@ -53,6 +53,14 @@ static QNode *_node_quadrant(QNode *node, vec2 pos) {
 }
 
 /**
+ * Sets the node boundaries
+ */
+void _set_bounds(QNode *node, vec2 nw, vec2 se) {
+    node->self_nw = nw;
+    node->self_se = se;
+}
+
+/**
  * Clears data properites in a node
  */
 static void _node_clear_data(QNode *node) {
@@ -153,10 +161,10 @@ static int _node_split(QTree *tree, QNode *node) {
     float ctry = miny + ((maxy - miny) / 2);
 
     /*                         nw                     se              */
-    qnode_set_bounds(nw, (vec2){minx, miny}, (vec2){ctrx, ctry});
-    qnode_set_bounds(ne, (vec2){ctrx, miny}, (vec2){maxx, ctry});
-    qnode_set_bounds(se, (vec2){ctrx, ctry}, (vec2){maxx, maxy});
-    qnode_set_bounds(sw, (vec2){minx, ctry}, (vec2){ctrx, maxy});
+    _set_bounds(nw, (vec2){minx, miny}, (vec2){ctrx, ctry});
+    _set_bounds(ne, (vec2){ctrx, miny}, (vec2){maxx, ctry});
+    _set_bounds(se, (vec2){ctrx, ctry}, (vec2){maxx, maxy});
+    _set_bounds(sw, (vec2){minx, ctry}, (vec2){ctrx, maxy});
 
     node->nw = nw;
     node->ne = ne;
@@ -319,11 +327,6 @@ int qnode_overlaps_area(QNode *node, vec2 nw, vec2 se) {
     return node != NULL && node->self_nw.x < se.x && node->self_se.x >= nw.x && node->self_nw.y < se.y && node->self_se.y >= nw.y;
 }
 
-void qnode_set_bounds(QNode *node, vec2 nw, vec2 se) {
-    node->self_nw = nw;
-    node->self_se = se;
-}
-
 /**
  * recusively walk trough a quad node's children and apply on before (recusing) and on after call backs
  */
@@ -367,7 +370,7 @@ QTree *qtree_create(vec2 window_nw, vec2 window_se) {
         return NULL;
     }
 
-    qnode_set_bounds(tree->root, window_nw, window_se);
+    _set_bounds(tree->root, window_nw, window_se);
     tree->length = 0;
 
     return tree;

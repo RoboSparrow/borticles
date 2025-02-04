@@ -3,12 +3,6 @@
 
 #define __DOING_TESTS__
 
-#define MATH_3D_IMPLEMENTATION
-#include "external/math_3d.h"
-
-#define RAYGUI_IMPLEMENTATION // req for linking
-#include "external/raygui.h"
-
 extern unsigned int scount;
 extern unsigned int gcount;
 

@@ -49,22 +49,6 @@ static void test_node() {
     DONE();
 }
 
-static void test_node_bounds() {
-    DESCRIBE("bounds");
-    QNode *node;
-
-    node = qnode_create(NULL);
-
-    qnode_set_bounds(node, (vec2) {1.f, 2.f}, (vec2) {2.f, 4.f});
-    assert(node->self_nw.x == 1.0);
-    assert(node->self_nw.y == 2.0);
-    assert(node->self_se.x == 2.0);
-    assert(node->self_se.y == 4.0);
-
-    qnode_destroy(node);
-    DONE();
-}
-
 static void test_tree_insert() {
     QTree *tree =  qtree_create((vec2) {1.f, 1.f}, (vec2) {10.f, 10.f});
     assert(tree != NULL);
@@ -332,7 +316,6 @@ static void test_node_parent() {
 void test_qtree(int argc, char **argv) {
     test_tree();
     test_node();
-    test_node_bounds();
     test_tree_insert();
     test_tree_insert_outside();
     test_tree_insert_replace();
