@@ -55,7 +55,7 @@ static QNode *_node_quadrant(QNode *node, vec2 pos) {
 /**
  * Sets the node boundaries
  */
-void _set_bounds(QNode *node, vec2 nw, vec2 se) {
+static void _set_bounds(QNode *node, vec2 nw, vec2 se) {
     node->self_nw = nw;
     node->self_se = se;
 }
@@ -179,7 +179,7 @@ static int _node_split(QTree *tree, QNode *node) {
  * Find a node for a given position
  * uses same conditions as _node_find()
  */
-QNode *_node_find(QTree *tree, QNode *node, vec2 pos) {
+static QNode *_node_find(QTree *tree, QNode *node, vec2 pos) {
     if (!tree || !node) {
         return NULL;
     }
