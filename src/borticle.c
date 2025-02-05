@@ -136,7 +136,8 @@ void bort_update(State *state) {
             (vec2) {
                 bort->pos.x,
                 bort->pos.y
-            }
+            },
+            bort->size
         );
 
         // update vertex data for vbos

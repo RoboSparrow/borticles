@@ -12,6 +12,12 @@
 
 #include "test.h"
 
+#define MATH_3D_IMPLEMENTATION
+#include "external/math_3d.h"
+
+#define RAYGUI_IMPLEMENTATION
+#include "external/raygui.h"
+
 enum Sections {
     TEST_NONE,
     TEST_QTREE,

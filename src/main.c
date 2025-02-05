@@ -174,7 +174,7 @@ int main(int argc, char **argv) {
         ui_update(state);
 
         // state_print(stdout, state);
-        // qtree_print(stdout, state->tree);
+        // qtree_print(stdout, state->tree);exit(1);
 
         // draw
         bort_draw_2D(&bort, state);

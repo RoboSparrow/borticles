@@ -11,6 +11,10 @@ extern unsigned int gcount;
 #define DESCRIBE(message) fprintf(stderr, "    \033[1;34m=>\033[0m %s() %s\n", __func__, message)
 #define DONE() fprintf(stderr, "    \033[1;32mPASS\033[0m: %s\n\n", __func__)
 
+
+#define ASSERT_FLOAT(a, b, epsilon) do { assert(fabs(a - b) < epsilon); } while(0)
+
+
 void test_qtree(int argc, char **argv);
 void test_qlist(int argc, char **argv);
 

@@ -9,6 +9,7 @@
 typedef struct TestItem {
     int id;
     vec2 pos; // control data, will not be queried within qtree.h
+    float mass;
 } TestItem;
 
 
@@ -167,7 +168,7 @@ static void test_find_in_area() {
     float radius = 2.f;
     vec2 pos = (vec2) {4.f, 4.f};
 
-    TestItem ref = {0, pos};
+    TestItem ref = {0, pos, 1.f};
 
     vec2 nw = {ref.pos.x - radius, ref.pos.y - radius};
     vec2 se = {ref.pos.x + radius, ref.pos.y + radius};
@@ -176,33 +177,39 @@ static void test_find_in_area() {
     // inside
     TestItem itm1 = {
         .id=1,
-        .pos=(vec2) {pos.x + (radius / 2.f), pos.y + (radius / 2.f)}
+        .pos=(vec2) {pos.x + (radius / 2.f), pos.y + (radius / 2.f)},
+        .mass=1.f
     };
 
     TestItem itm2 = {
         .id=2,
-        .pos=(vec2) {pos.x + radius, pos.y + radius}
+        .pos=(vec2) {pos.x + radius, pos.y + radius},
+        .mass=1.f
     };
 
     TestItem itm3 = {
         .id=3,
-        .pos=(vec2) {pos.x - radius, pos.y - radius}
+        .pos=(vec2) {pos.x - radius, pos.y - radius},
+        .mass=1.f
     };
 
     // outside
     TestItem itm4 = {
         .id=4,
-        .pos=(vec2) {1.f, 1.f}
+        .pos=(vec2) {1.f, 1.f},
+        .mass=1.f
     };
 
     TestItem itm5 = {
         .id=5,
-        .pos=(vec2) {pos.x, pos.y + radius + 0.1}
+        .pos=(vec2) {pos.x, pos.y + radius + 0.1},
+        .mass=1.f
     };
 
     TestItem itm6 = {
         .id=6,
-        .pos=(vec2) {pos.x - radius - 0.1, pos.y}
+        .pos=(vec2) {pos.x - radius - 0.1, pos.y},
+        .mass=1.f
     };
 
     TestItem *inside[3]  = {&itm1, &itm2, &itm3};
@@ -211,17 +218,17 @@ static void test_find_in_area() {
     QList *list = qlist_create(1);
     int res, i;
 
-    res = qtree_insert(tree, &ref, ref.pos);
+    res = qtree_insert(tree, &ref, ref.pos, ref.mass);
     assert(res == QUAD_INSERTED);
 
     // insert nodes
     for (i = 0; i < 3; i++) {
-        res = qtree_insert(tree, inside[i], inside[i]->pos);
+        res = qtree_insert(tree, inside[i], inside[i]->pos, inside[i]->mass);
         // printf("(%d): {%f, %f}, nw: {%f, %f}, se: {%f, %f}\n", inside[i]->id, inside[i]->pos.x, inside[i]->pos.y, nw.x, nw.y, se.x, se.y);
         assert(res == QUAD_INSERTED);
     }
     for (i = 0; i < 3; i++) {
-        res = qtree_insert(tree, outside[i], outside[i]->pos);
+        res = qtree_insert(tree, outside[i], outside[i]->pos, outside[i]->mass);
         // printf("(%d): {%f, %f}, nw: {%f, %f}, se: {%f, %f}\n", outside[i]->id, outside[i]->pos.x, outside[i]->pos.y, nw.x, nw.y, se.x, se.y);
         assert(res == QUAD_INSERTED);
     }

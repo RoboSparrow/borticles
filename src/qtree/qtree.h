@@ -39,8 +39,13 @@ typedef struct QNode {
     vec2 self_nw;
     vec2 self_se;
 
+    // barnes- hut
+    float mass;
+    vec2 com; // center of mass: is == pos if node is a leaf
+
+    // data
     vec2 pos;
-    void *data;
+    void *data; // this is the data position vector and not node the node pos: TODO rename
 } QNode;
 
 typedef struct QTree {
@@ -51,7 +56,7 @@ typedef struct QTree {
 QTree *qtree_create(vec2 window_nw, vec2 window_se);
 void qtree_destroy(QTree *tree);
 
-int qtree_insert(QTree *tree, void *data, vec2 pos);
+int qtree_insert(QTree *tree, void *data, vec2 pos, float mass);
 QNode *qtree_find(QTree *tree, vec2 pos);
 
 QNode *qnode_create(QNode *parent);

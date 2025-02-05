@@ -64,23 +64,42 @@ static void _set_bounds(QNode *node, vec2 nw, vec2 se) {
  * Clears data properites in a node
  */
 static void _node_clear_data(QNode *node) {
-    node->pos = (vec2){INFINITY, INFINITY};
+    node->pos = (vec2){0.f};
     node->data = NULL;
+    node->mass = 0.f;
+    node->com = (vec2){0.f};
+}
+
+static void _node_update_gravity(QNode *node, vec2 pos, float mass)  {
+    if (!node) {
+        return;
+    }
+
+
+    node->com.x = ( node->com.x * node->mass + pos.x * mass) / (node->mass+ mass);
+    node->com.y = ( node->com.y * node->mass + pos.y * mass) / (node->mass+ mass);
+    node->mass += mass;
+
 }
 
 /**
  * Inserts an entity into a tree node. The node might be split into four childs, or the  already existing entity in this node might be replaced
  * Note: The position bounds must be checked by callee (qtree_insert())
  */
-static int _node_insert(QTree *tree, QNode *node, void *data, vec2 pos) {
+static int _node_insert(QTree *tree, QNode *node, void *data, vec2 pos, float mass) {
     if (!tree || !node || !data) {
         return QUAD_FAILED;
     }
+
+    // update mass and center of mass for this node
+
 
     // 1. insert into THIS (empty) node (just created before)
     if (qnode_isempty(node)) {
         node->pos = pos;
         node->data = data;
+        _node_update_gravity(node, pos, mass);
+        _node_update_gravity(node->parent, pos, mass);
         return QUAD_INSERTED;
     }
 
@@ -90,6 +109,8 @@ static int _node_insert(QTree *tree, QNode *node, void *data, vec2 pos) {
         if (node->pos.x == pos.x && node->pos.y == pos.y) {
             node->pos = pos;
             node->data = data;
+            _node_update_gravity(node, pos, mass);
+            _node_update_gravity(node->parent, pos, mass);
             return QUAD_REPLACED;
         }
 
@@ -99,7 +120,7 @@ static int _node_insert(QTree *tree, QNode *node, void *data, vec2 pos) {
         }
 
         // 2.3. insertcurrent node
-        return _node_insert(tree, node, data, pos);
+        return _node_insert(tree, node, data, pos, mass);
     }
 
     // 3. insert into one of THIS CHILDREN
@@ -108,7 +129,7 @@ static int _node_insert(QTree *tree, QNode *node, void *data, vec2 pos) {
         if (!child) {
             return QUAD_FAILED;
         }
-        return _node_insert(tree, child, data, pos);
+        return _node_insert(tree, child, data, pos, mass);
     }
 
     return QUAD_FAILED;
@@ -134,6 +155,7 @@ static int _node_split(QTree *tree, QNode *node) {
 
     void *data = node->data;
     vec2 pos = node->pos;
+    float mass  = node->mass;
 
     // nw(x,y)            hw
     // x────────────┬────────────┐
@@ -172,7 +194,7 @@ static int _node_split(QTree *tree, QNode *node) {
     node->se = se;
 
     _node_clear_data(node);
-    return _node_insert(tree, node, data, pos); // inserts into one of the children
+    return _node_insert(tree, node, data, pos, mass); // inserts into one of the children
 }
 
 /**
@@ -384,7 +406,7 @@ void qtree_destroy(QTree *tree) {
     freez(tree);
 }
 
-int qtree_insert(QTree *tree, void *data, vec2 pos) {
+int qtree_insert(QTree *tree, void *data, vec2 pos, float mass) {
     if (!tree || !data) {
         return QUAD_FAILED;
     }
@@ -394,7 +416,7 @@ int qtree_insert(QTree *tree, void *data, vec2 pos) {
         return QUAD_FAILED;
     }
 
-    int status = _node_insert(tree, tree->root, data, pos);
+    int status = _node_insert(tree, tree->root, data, pos, mass);
     if (status == QUAD_INSERTED) {
         tree->length++;
     }
@@ -456,9 +478,10 @@ void qnode_print(FILE *fp, QNode *node) {
     fprintf(fp, "{self_nw: {%f, %f}, self_se: {%f, %f}, ", node->self_nw.x, node->self_nw.y, node->self_se.x, node->self_se.y);
     fprintf(fp, "parent: '%c', ", (node->parent) ? 'y' : '-');
     fprintf(fp, "nw: '%c', sw: '%c', se: '%c', nw: '%c', ", (node->nw) ? 'y' : '-', (node->sw) ? 'y' : '-', (node->se) ? 'y' : '-', (node->ne) ? 'y' : '-');
+    fprintf(fp, "mass: %f, com: {%f, %f}, ", node->mass, node->com.x, node->com.y);
 
     if (node->pos.x < INFINITY) {
-        fprintf(fp, "pos: {%f, %f}", node->pos.x, node->pos.y);
+        fprintf(fp, "pos: {%f, %f}, ", node->pos.x, node->pos.y);
     } else {
         fprintf(fp, "pos: {INF..,INF..}}");
     }
