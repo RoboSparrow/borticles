@@ -41,7 +41,7 @@ static void _configure(State *state, int argc, char **argv) {
     state->algorithms |= ALGO_NOMADIC;
     //state->algorithms = ALGO_NONE;
 
-    char usage[] = "usage: %s [-h] [-f fps] [-g fgravity constant] [-p particles:number] [-a algorithms <int,int, ...>] [-P paused]\n";
+    char usage[] = "usage: %s [-h] [-f fps] [-g gravity constant] [-p particles:number] [-a algorithms <int,int, ...>] [-P paused]\n";
     while ((opt = getopt(argc, argv, "f:g:p:a:Ph")) != -1) {
         switch (opt) {
             case 'p':
