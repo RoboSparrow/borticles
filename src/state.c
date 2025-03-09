@@ -12,7 +12,7 @@
 #include "ui.h"
 
 // @see enum Algotithm
-char algorithms[ALGO_NUM][64] = { "ALGO_NONE", "ALGO_ATTRACTION", "ALGO_NOMADIC"};
+const char *algorithms[ALGO_LEN] = {"ALGO_NONE", "ALGO_NOMADIC", "ALGO_BARNES_HUT"};
 
 ////
 // State

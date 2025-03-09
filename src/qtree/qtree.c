@@ -75,11 +75,9 @@ static void _node_update_gravity(QNode *node, vec2 pos, float mass)  {
         return;
     }
 
-
-    node->com.x = ( node->com.x * node->mass + pos.x * mass) / (node->mass+ mass);
-    node->com.y = ( node->com.y * node->mass + pos.y * mass) / (node->mass+ mass);
+    node->com.x = ( node->com.x * node->mass + pos.x * mass) / (node->mass + mass);
+    node->com.y = ( node->com.y * node->mass + pos.y * mass) / (node->mass + mass);
     node->mass += mass;
-
 }
 
 /**
@@ -92,7 +90,6 @@ static int _node_insert(QTree *tree, QNode *node, void *data, vec2 pos, float ma
     }
 
     // update mass and center of mass for this node
-
 
     // 1. insert into THIS (empty) node (just created before)
     if (qnode_isempty(node)) {

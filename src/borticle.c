@@ -109,6 +109,10 @@ void bort_init(State *state, unsigned int start, unsigned int end) {
         if (state->algorithms & ALGO_NOMADIC) {
             bort_init_nomadic(state, bort, i);
         }
+
+        if (state->algorithms & ALGO_BARNES_HUT) {
+            bort_init_barnes_hut(state, bort, i);
+        }
     }
 }
 
@@ -169,7 +173,10 @@ void bort_update(State *state) {
         if (state->algorithms & ALGO_NOMADIC) {
             bort_update_nomadic(state, bort, i);
         }
-        // bort_print(stdout, bort);
+
+        if (state->algorithms & ALGO_BARNES_HUT) {
+            bort_update_barnes_hut(state, bort, i);
+        }
     }
 }
 

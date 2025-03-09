@@ -33,13 +33,13 @@
 
 static void _configure(State *state, int argc, char **argv) {
 
-#include <string.h>
     int opt, ival;
     float fval;
     unsigned int pop_len = POP_MAX;
 
     // default
     state->algorithms |= ALGO_NOMADIC;
+    //state->algorithms = ALGO_NONE;
 
     char usage[] = "usage: %s [-h] [-f fps] [-g fgravity constant] [-p particles:number] [-a algorithms <int,int, ...>] [-P paused]\n";
     while ((opt = getopt(argc, argv, "f:g:p:a:Ph")) != -1) {
@@ -66,7 +66,7 @@ static void _configure(State *state, int argc, char **argv) {
 
             case 'g':
                 fval = atof(optarg);
-                if (!fval || fval < 0.f) {
+                if (!fval < 0.f) {
                     fprintf(stderr, "invalid 'g' option value\n");
                     exit(1);
                 }
@@ -81,11 +81,12 @@ static void _configure(State *state, int argc, char **argv) {
                 pt = strtok (optarg, ",");
                 while (pt != NULL) {
                     int ival = atoi(pt);
-                    if (ival < 0 || ival > ALGO_NUM -1) {
+
+                    if (ival < 0 || ival >= ALGO_LEN) {
                         fprintf(stderr, "invalid 'a' option value\n");
                         exit(1);
                     }
-                    state->algorithms |= ival;
+                    state->algorithms |= (1 << ival);
                     pt = strtok (NULL, ",");
                 }
             }
@@ -105,9 +106,6 @@ static void _configure(State *state, int argc, char **argv) {
     }
 
     state_set_pop_len(state, pop_len);
-    //state->algorithms = ALGO_NONE;
-    //state->algorithms = ALGO_NOMADIC; // DEV TODO
-
     // state_print(stdout, state);
 }
 
@@ -146,7 +144,6 @@ int main(int argc, char **argv) {
 
     // fps calc
     SetTargetFPS(state->fps);
-
     state_print(stdout, state);
 
     while (!WindowShouldClose()) {

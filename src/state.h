@@ -67,12 +67,11 @@ void state_print(FILE *fp, State *state);
 
 typedef enum {
     ALGO_NONE       = 1 << 0, // 1
-    ALGO_ATTRACTION = 1 << 1, // 2
-    ALGO_NOMADIC    = 1 << 2, // 4
+    ALGO_NOMADIC    = 1 << 1, // 2
+    ALGO_BARNES_HUT = 1 << 2, // 4
 } Algotithm;
-#define ALGO_NUM 3
-
-extern char algorithms[ALGO_NUM][64];
+#define ALGO_LEN 3
+extern const char *algorithms[ALGO_LEN];
 
 // algorithm handlers
 
@@ -81,4 +80,7 @@ void bort_update_default(State *state, Borticle *bort, size_t index);
 
 void bort_init_nomadic(State *state, Borticle *bort, size_t index);
 void bort_update_nomadic(State *state, Borticle *bort, size_t index);
+
+void bort_init_barnes_hut(State *state, Borticle *bort, size_t index);
+void bort_update_barnes_hut(State *state, Borticle *bort, size_t index);
 #endif
