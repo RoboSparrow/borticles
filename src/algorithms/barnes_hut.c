@@ -92,8 +92,8 @@ static void _update_position(State *state, Borticle *bort, size_t index) {
     int count = 0;
     float force = _calculate_force(bort, state->tree->root, THETA, state->grav_g, &count);
     printf(" (%d), {%f, %f}\n", bort->id, bort->pos.x, bort->pos.y);
-    bort->pos.x += (force * bort->pos.x);
-    bort->pos.y += (force * bort->pos.y);
+    bort->pos.x += force;
+    bort->pos.y += force;
 
     printf("(%d), {%f, %f} => %f (%d)\n", bort->id, bort->pos.x, bort->pos.y, force, count);
 }
