@@ -104,8 +104,8 @@ void ui_draw(State *state) {
 
         // algorithms
         int old = algo_active;
-        if (algo_active != old) {
         GuiToggleGroup(_grid(1, 0, 0 ,0), algo_options, &algo_active); // fn currently always returns 0, so checks are useless
+        if (algo_active != old) {
             state->algorithms = (1 << algo_active); // singl assignment not stacking algorithms (yet)
         }
     }
