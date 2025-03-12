@@ -57,7 +57,9 @@ QTree *qtree_create(vec2 window_nw, vec2 window_se);
 void qtree_destroy(QTree *tree);
 
 int qtree_insert(QTree *tree, void *data, vec2 pos, float mass);
+
 QNode *qtree_find(QTree *tree, vec2 pos);
+QNode *qtree_find_nearest(QTree *tree, vec2 pos);
 
 QNode *qnode_create(QNode *parent);
 void qnode_destroy(QNode *node);

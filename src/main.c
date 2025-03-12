@@ -146,6 +146,8 @@ int main(int argc, char **argv) {
     SetTargetFPS(state->fps);
     state_print(stdout, state);
 
+    Vector2 mpos = {0.f};
+
     while (!WindowShouldClose()) {
 
         if (IsKeyPressed(KEY_SPACE)) {
@@ -169,6 +171,19 @@ int main(int argc, char **argv) {
         state->tree = qtree_create((vec2){0.f, 0.f}, (vec2){(float) state->width, (float) state->height});
         bort_update(state);
         ui_update(state);
+
+        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)){
+            mpos = GetMousePosition();
+            if (state->selected) {
+                state->selected = NULL;
+            } else {
+                QNode *nearest = qtree_find_nearest(state->tree, (vec2) {mpos.x, mpos.y});
+
+                if (nearest) {
+                    state->selected = (Borticle*) nearest->data;
+                }
+            }
+        }
 
         // state_print(stdout, state);
         // qtree_print(stdout, state->tree);exit(1);

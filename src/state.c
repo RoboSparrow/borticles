@@ -41,6 +41,8 @@ State *state_create() {
     state->population = NULL;
     state->tree = NULL;
 
+    state->selected = NULL;
+
     state->positions = NULL;
     state->colors = NULL;
 
@@ -62,6 +64,7 @@ void state_set_pop_len(State *state, unsigned int len) {
         freez(state->population);
         state->population = NULL;
         freez(state->positions);
+        state->selected = NULL;
         state->positions = NULL;
         freez(state->colors);
         state->colors = NULL;
@@ -132,6 +135,8 @@ void state_print(FILE *fp, State *state) {
         "  pop_max: %d\n"
         "  pop_len: %d\n"
         "  population: %s\n"
+        "  tree: %d\n"
+        "  selected: %d\n"
         "  positions: %s\n"
         "  colors: %s\n"
         "  ui_minimized: %d\n"
@@ -151,6 +156,8 @@ void state_print(FILE *fp, State *state) {
         state->pop_max,
         state->pop_len,
         (state->population) ? "[...]" : "<NULL>",
+        (state->tree) ? state->tree->length : -1,
+        (state->selected) ? state->selected->id : -1,
         (state->positions) ? "[...]" : "<NULL>",
         (state->colors) ? "[...]" : "<NULL>",
         state->ui_minimized,

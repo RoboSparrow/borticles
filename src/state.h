@@ -40,6 +40,9 @@ typedef struct State {
     Borticle *population;
     QTree *tree;
 
+    // sngle borticle to track
+    Borticle *selected;
+
     // vbos
     vec4 *positions;
     rgba *colors;

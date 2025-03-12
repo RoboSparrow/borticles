@@ -195,8 +195,30 @@ static int _node_split(QTree *tree, QNode *node) {
 }
 
 /**
+ * Find the smallest qnode (leaf) who cony a given position
+ */
+static QNode *_node_find_nearest(QTree *tree, QNode *node, vec2 pos) {
+    if (!tree || !node) {
+        return NULL;
+    }
+
+    if (qnode_isleaf(node)) {
+        return node;
+    }
+
+    if (qnode_ispointer(node)) {
+        QNode *child = _node_quadrant(node, pos);
+        if (!child) {
+            return NULL;
+        }
+        return _node_find_nearest(tree, child, pos);
+    }
+
+    return NULL;
+}
+
+/**
  * Find a node for a given position
- * uses same conditions as _node_find()
  */
 static QNode *_node_find(QTree *tree, QNode *node, vec2 pos) {
     if (!tree || !node) {
@@ -421,11 +443,24 @@ int qtree_insert(QTree *tree, void *data, vec2 pos, float mass) {
     return status;
 }
 
+/**
+ * Find a qnode who matches exact a given position
+ */
 QNode *qtree_find(QTree *tree, vec2 pos) {
     if (!tree) {
         return NULL;
     }
     return _node_find(tree, tree->root, pos);
+}
+
+/**
+ * Find the smallest qnode (leaf) who contains a given position
+ */
+QNode *qtree_find_nearest(QTree *tree, vec2 pos) {
+    if (!tree) {
+        return NULL;
+    }
+    return _node_find_nearest(tree, tree->root, pos);
 }
 
 QList *qtree_find_in_area(QTree *tree, vec2 pos, float radius, QList *list) {
