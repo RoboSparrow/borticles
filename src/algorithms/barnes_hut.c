@@ -2,9 +2,8 @@
 #include "qtree/qtree.h"
 #include "state.h"
 
-// Threshold for using coenter of mass approximation vs  direct summation
+// Threshold for using center of mass approximation vs direct summation
 static const float THETA = 1.f; // TODO to state
-
 
 /**
  * Applies Newton's law of universal gravitation
@@ -50,24 +49,21 @@ static float _calculate_force(Borticle *bort, QNode *node, float theta, float gr
         return force;
     }
 
-    *count += 1;
+    Borticle *targ = (Borticle*) node->data;
+    if (targ && bort->id == targ->id) {
+        return force;
+    }
 
     vec2 sub = (vec2) {bort->pos.x - node->com.x, bort->pos.y - node->com.y};
     float radius = sqrtf(sub.x * sub.x + sub.y * sub.y);
 
-    if (qnode_isleaf(node)) {
-        if (!node->data) {
-            return force;
-        }
-        // leaf node, direct comparsion (node->mass == bort->size);
-        Borticle *targ = (Borticle*) node->data;
+    if (targ) {
+        // leaf node: direct comparsion (node->mass == bort->size);
         return _calculate_gravitational_force(bort->size, targ->size, radius, grav_g) ;
     }
 
     float height = node->self_se.y - node->self_nw.y;
     float res = (radius == 0.f) ? 0.f : (height / radius); // using node height
-
-    /// TODO add another filter
 
     if (res < theta) {
         // sufficiently far away: use center of mass ansd skip child nodes
