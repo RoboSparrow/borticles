@@ -1,6 +1,6 @@
 # Borticles
 
-a rewrite of https://github.com/RoboSparrow/wuselwerk using modern OpenGL and raylib
+This is a rewrite of https://github.com/RoboSparrow/wuselwerk using modern OpenGL and raylib
 
 * [OpenGL 4.1](https://docs.gl/)
 * [Glad](https://glad.dav1d.de/)
