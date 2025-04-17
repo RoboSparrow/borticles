@@ -10,7 +10,7 @@
 
 typedef struct State State;
 
-typedef struct {
+typedef struct Borticle {
     unsigned int id;
     vec3_t pos, vel, acc;
     float size;  // TODO replace with pointer to vbo array

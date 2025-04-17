@@ -54,22 +54,25 @@ static float _calculate_force(Borticle *bort, QNode *node, float theta, float gr
         return force;
     }
 
+    // calculate distance
     vec2 sub = (vec2) {bort->pos.x - node->com.x, bort->pos.y - node->com.y};
     float radius = sqrtf(sub.x * sub.x + sub.y * sub.y);
 
+    // leaf nodes: direct comparsion (node->mass == bort->size);
     if (targ) {
-        // leaf node: direct comparsion (node->mass == bort->size);
         return _calculate_gravitational_force(bort->size, targ->size, radius, grav_g) ;
     }
 
+    // check if we can use the node mass for far away regions
     float height = node->self_se.y - node->self_nw.y;
     float res = (radius == 0.f) ? 0.f : (height / radius); // using node height
 
+    // far away nodes: use center of mass and skip child nodes
     if (res < theta) {
-        // sufficiently far away: use center of mass ansd skip child nodes
         return _calculate_gravitational_force(bort->size, node->mass, radius, grav_g) ;
     }
 
+    // nearby nodes: traverse into child nodes
     force += _calculate_force(bort, node->ne, theta, grav_g, count);
     force += _calculate_force(bort, node->nw, theta, grav_g, count);
     force += _calculate_force(bort, node->sw, theta, grav_g, count);
