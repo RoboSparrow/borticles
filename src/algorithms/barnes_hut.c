@@ -18,40 +18,19 @@ static float _calculate_gravitational_force(float mass1, float mass2, float radi
 }
 
 /**
- * Function MainApp::CalcForce
- *   for all particles
- *     force = RootNode.CalculateForceFromTree(particle)
- *   end for
- * end
- *
- * Function force = TreeNode::CalculateForce(targetParticle)
- *   force = 0
- *
- *   if number of particle equals 1
- *     force = Gravitational force between targetParticle and particle
- *   else
- *     r = distance from nodes center of mass to targetParticle
- *     d = height of the node
- *     if (d/r < θ)
- *       force = Gravitational force between targetParticle and node
- *     else
- *       for all child nodes n
- *         force += n.CalculateForce(particle)
- *       end for
- *     end if
- *   end
- * end
+ * Compute the forces excerted on the particles, using the Barnes-Hut Approximation
+ * @see https://www.cs.princeton.edu/courses/archive/fall03/cs126/assignments/barnes-hut.html
  */
-static float _calculate_force(Borticle *bort, QNode *node, float theta, float grav_g, int *count) {
+static void _calculate_force(Borticle *bort, QNode *node, vec2 *delta, float theta, float grav_g, int *count) {
     float force = 0.f;
 
     if(!bort || !node) {
-        return force;
+        return;
     }
 
     Borticle *targ = (Borticle*) node->data;
     if (targ && bort->id == targ->id) {
-        return force;
+        return;
     }
 
     // calculate distance
@@ -60,7 +39,10 @@ static float _calculate_force(Borticle *bort, QNode *node, float theta, float gr
 
     // leaf nodes: direct comparsion (node->mass == bort->size);
     if (targ) {
-        return _calculate_gravitational_force(bort->size, targ->size, radius, grav_g) ;
+        force = _calculate_gravitational_force(bort->size, targ->size, radius, grav_g);
+        delta->x += (bort->pos.x < targ->pos.x) ? force : -force;
+        delta->y += (bort->pos.y < targ->pos.y) ? force : -force;
+       return;
     }
 
     // check if we can use the node mass for far away regions
@@ -69,16 +51,17 @@ static float _calculate_force(Borticle *bort, QNode *node, float theta, float gr
 
     // far away nodes: use center of mass and skip child nodes
     if (res < theta) {
-        return _calculate_gravitational_force(bort->size, node->mass, radius, grav_g) ;
+        force = _calculate_gravitational_force(bort->size, node->mass, radius, grav_g) ;
+        delta->x += (bort->pos.x < node->com.x) ? force : -force;
+        delta->y += (bort->pos.y < node->com.y) ? force : -force;
+        return;
     }
 
     // nearby nodes: traverse into child nodes
-    force += _calculate_force(bort, node->ne, theta, grav_g, count);
-    force += _calculate_force(bort, node->nw, theta, grav_g, count);
-    force += _calculate_force(bort, node->sw, theta, grav_g, count);
-    force += _calculate_force(bort, node->se, theta, grav_g, count);
-
-    return force;
+    _calculate_force(bort, node->ne, delta, theta, grav_g, count);
+    _calculate_force(bort, node->nw, delta, theta, grav_g, count);
+    _calculate_force(bort, node->sw, delta, theta, grav_g, count);
+    _calculate_force(bort, node->se, delta, theta, grav_g, count);
 }
 
 static void _update_size(State *state, Borticle *bort, size_t index) {}
@@ -89,12 +72,12 @@ static void _update_position(State *state, Borticle *bort, size_t index) {
     }
 
     int count = 0;
-    float force = _calculate_force(bort, state->tree->root, THETA, state->grav_g, &count);
-    printf(" (%d), {%f, %f}\n", bort->id, bort->pos.x, bort->pos.y);
-    bort->pos.x += force;
-    bort->pos.y += force;
+    vec2 delta = {0.f};
+    _calculate_force(bort, state->tree->root, &delta, THETA, state->grav_g, &count);
 
-    printf("(%d), {%f, %f} => %f (%d)\n", bort->id, bort->pos.x, bort->pos.y, force, count);
+    bort->pos.x += delta.x;
+    bort->pos.y += delta.y;
+    // printf("(%d), {%f, %f} => {%f, %f} (%d)\n", bort->id, bort->pos.x, bort->pos.y, delta.x, delta.y, count);
 }
 
 static void _update_color(State *state, Borticle *bort, size_t index) {}
