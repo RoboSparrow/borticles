@@ -38,8 +38,9 @@ static void _configure(State *state, int argc, char **argv) {
     unsigned int pop_len = POP_MAX;
 
     // default
-    state->algorithms |= ALGO_NOMADIC;
-    //state->algorithms = ALGO_NONE;
+    state->algorithms |= ALGO_BARNES_HUT;
+    // state->algorithms |= ALGO_NOMADIC;
+    // state->algorithms = ALGO_NONE;
 
     char usage[] = "usage: %s [-h] [-f fps] [-g gravity constant] [-p particles:number] [-a algorithms <int,int, ...>] [-P paused]\n";
     while ((opt = getopt(argc, argv, "f:g:p:a:Ph")) != -1) {

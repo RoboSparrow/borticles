@@ -50,7 +50,7 @@ State *state_create() {
 
     state->ui_debug = 0;
     state->ui_borticles = 1;
-    state->ui_qtree = 1;
+    state->ui_qtree = 0;
 
     return state;
 }
