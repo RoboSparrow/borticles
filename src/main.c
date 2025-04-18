@@ -43,7 +43,7 @@ static void _configure(State *state, int argc, char **argv) {
     // state->algorithms = ALGO_NONE;
 
     char usage[] = "usage: %s [-h] [-f fps] [-g gravity constant] [-p particles:number] [-a algorithms <int,int, ...>] [-P paused]\n";
-    while ((opt = getopt(argc, argv, "f:g:p:a:Ph")) != -1) {
+    while ((opt = getopt(argc, argv, "f:g:p:a:PDh")) != -1) {
         switch (opt) {
             case 'p':
                 ival = atoi(optarg);
@@ -95,6 +95,10 @@ static void _configure(State *state, int argc, char **argv) {
 
             case 'P':
                 state->paused = 1;
+            break;
+
+            case 'D':
+                state->ui_debug = 1;
             break;
 
             case 'h':
