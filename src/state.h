@@ -32,6 +32,8 @@ typedef struct State {
 
     // Gravitational constant G
     float grav_g;
+    // Threshold for using center of mass approximation vs direct summation
+    float bh_theta;
 
     // population
     unsigned int pop_max;

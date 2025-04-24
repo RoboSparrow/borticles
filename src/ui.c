@@ -13,8 +13,10 @@ static struct GuiDialogState m_window = {{0}};
 const char *algo_options = NULL;
 int algo_active = 0; //TODO active
 
-char grav_txt[32] = "\0";
+// caches
 float grav_g = 0.f;
+float bh_theta = 0.f;
+
 int grav_edit = 0;
 
 char sel_txt[1024] = "\0";
@@ -44,14 +46,14 @@ void ui_init(State *state) {
     m_window.line_height = 20;
     m_window.line_spacing = 5;
 
-    m_window.rect.height = 30 + (8 * (m_window.line_height + m_window.line_spacing )) + (2 * m_window.padding);
+    m_window.rect.height = 30 + (10 * (m_window.line_height + m_window.line_spacing )) + (2 * m_window.padding);
 
     // Note @see raylib rtext.c currently (v 5.5) TextJoin() is using stack memory
     // and should not be freed: static char buffer[MAX_TEXT_BUFFER_LENGTH]
     algo_options = TextJoin(algorithms, ALGO_LEN, "\n");
 
     grav_g =  state->grav_g;
-    snprintf(grav_txt, sizeof(grav_txt), "%2.2f", grav_g);
+    bh_theta =  state->bh_theta;
 }
 
 void ui_update(State *state) {
@@ -100,6 +102,13 @@ void ui_draw(State *state) {
         GuiSlider(_grid(m_window, 0, 7, 0, 0), NULL, TextFormat("%2.f (max:%2.f)", state->grav_g, 20.f), &grav_g, 0.f, 20.f);
         if (grav_g != state->grav_g) {
             state->grav_g = grav_g;
+        }
+
+        // bh_theta
+        GuiLabel(_grid(m_window, 0, 8, 0, 0), "Barnes Hut: theta");
+        GuiSlider(_grid(m_window, 0, 9, 0, 0), NULL, TextFormat("%2.f (max:%2.f)", state->bh_theta, 2.f), &bh_theta, .5f, 2.f);
+        if (bh_theta != state->bh_theta) {
+            state->bh_theta = bh_theta;
         }
 
         /* second column */

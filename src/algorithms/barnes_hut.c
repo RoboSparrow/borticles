@@ -2,9 +2,6 @@
 #include "qtree/qtree.h"
 #include "state.h"
 
-// Threshold for using center of mass approximation vs direct summation
-static const float THETA = 1.f; // TODO to state
-
 /**
  * Applies Newton's law of universal gravitation
  *
@@ -73,7 +70,7 @@ static void _update_position(State *state, Borticle *bort, size_t index) {
 
     int count = 0;
     vec2 delta = {0.f};
-    _calculate_force(bort, state->tree->root, &delta, THETA, state->grav_g, &count);
+    _calculate_force(bort, state->tree->root, &delta, state->bh_theta, state->grav_g, &count);
 
     bort->pos.x += delta.x;
     bort->pos.y += delta.y;

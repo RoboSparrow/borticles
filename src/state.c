@@ -34,6 +34,7 @@ State *state_create() {
     state->algorithms = ALGO_NONE;
 
     state->grav_g = 9.81f;
+    state->bh_theta = 1.f;
 
     state->pop_max = POP_MAX;
     state->pop_len = 0;
@@ -132,6 +133,7 @@ void state_print(FILE *fp, State *state) {
         "  bg_color: {%d,%d,%d,%d}\n"
         "  algorithms: %d\n"
         "  grav_g: %.2f\n"
+        "  bh_theta: %.2f\n"
         "  pop_max: %d\n"
         "  pop_len: %d\n"
         "  population: %s\n"
@@ -153,6 +155,7 @@ void state_print(FILE *fp, State *state) {
         state->bg_color.r, state->bg_color.g, state->bg_color.b, state->bg_color.a,
         state->algorithms,
         state->grav_g,
+        state->bh_theta,
         state->pop_max,
         state->pop_len,
         (state->population) ? "[...]" : "<NULL>",
