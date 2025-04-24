@@ -16,7 +16,7 @@
 #define WORLD_WIDTH 800
 #define WORLD_HEIGHT 600
 
-#define POP_MAX 100000
+#define POP_MAX 10000
 
 typedef struct State {
     int width, height;
